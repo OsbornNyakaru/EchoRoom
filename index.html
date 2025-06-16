@@ -29,16 +29,58 @@
         40% { transform: translateY(-10px); }
         80% { transform: translateY(-5px); }
       }
+
+      /* ConvoAI Widget Responsive Styles */
+      elevenlabs-convai {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 1000 !important;
+        width: 60px !important;
+        height: 60px !important;
+        border-radius: 50% !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.3s ease !important;
+      }
+
+      /* Mobile optimizations */
+      @media (max-width: 768px) {
+        elevenlabs-convai {
+          bottom: 16px !important;
+          right: 16px !important;
+          width: 56px !important;
+          height: 56px !important;
+        }
+      }
+
+      /* Small mobile devices */
+      @media (max-width: 480px) {
+        elevenlabs-convai {
+          bottom: 12px !important;
+          right: 12px !important;
+          width: 52px !important;
+          height: 52px !important;
+        }
+      }
+
+      /* Hover effects for desktop */
+      @media (min-width: 769px) {
+        elevenlabs-convai:hover {
+          transform: scale(1.1) !important;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+      }
+
+      /* Ensure widget doesn't interfere with other elements */
+      elevenlabs-convai * {
+        pointer-events: auto !important;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- ElevenLabs ConvoAI Widget -->
-    <elevenlabs-convai agent-id="agent_01jxcd8ch5fzd801q9k9g6q8b3"></elevenlabs-convai>
-    <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
-    
-    <!-- ElevenLabs ConvoAI Widget -->
+    <!-- ElevenLabs ConvoAI Widget - Responsive positioned -->
     <elevenlabs-convai agent-id="agent_01jxcd8ch5fzd801q9k9g6q8b3"></elevenlabs-convai>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     
