@@ -35,12 +35,19 @@
         position: fixed !important;
         bottom: 20px !important;
         right: 20px !important;
-        z-index: 1000 !important;
+        z-index: 9999 !important;
+        border-radius: 50% !important;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+        transition: all 0.3s ease !important;
         width: 60px !important;
         height: 60px !important;
+      }
+
+      /* Target the internal button/iframe of the widget */
+      elevenlabs-convai > * {
         border-radius: 50% !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-        transition: all 0.3s ease !important;
+        width: 100% !important;
+        height: 100% !important;
       }
 
       /* Mobile optimizations */
@@ -58,20 +65,24 @@
         elevenlabs-convai {
           bottom: 12px !important;
           right: 12px !important;
-          width: 52px !important;
-          height: 52px !important;
+          width: 50px !important;
+          height: 50px !important;
         }
       }
 
-      /* Hover effects for desktop */
+      /* Hover effects for desktop only */
       @media (min-width: 769px) {
         elevenlabs-convai:hover {
-          transform: scale(1.1) !important;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2) !important;
+          transform: scale(1.05) !important;
+          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3) !important;
         }
       }
 
-      /* Ensure widget doesn't interfere with other elements */
+      /* Ensure proper stacking and interaction */
+      elevenlabs-convai {
+        pointer-events: auto !important;
+      }
+      
       elevenlabs-convai * {
         pointer-events: auto !important;
       }
@@ -80,7 +91,7 @@
   <body>
     <div id="root"></div>
 
-    <!-- ElevenLabs ConvoAI Widget - Responsive positioned -->
+    <!-- ElevenLabs ConvoAI Widget -->
     <elevenlabs-convai agent-id="agent_01jxcd8ch5fzd801q9k9g6q8b3"></elevenlabs-convai>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     
