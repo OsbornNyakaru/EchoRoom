@@ -29,95 +29,16 @@
         40% { transform: translateY(-10px); }
         80% { transform: translateY(-5px); }
       }
-
-      /* ConvoAI Widget Responsive Styles - Force positioning */
-      elevenlabs-convai {
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        left: auto !important;
-        top: auto !important;
-        z-index: 9999 !important;
-        width: 60px !important;
-        height: 60px !important;
-        border-radius: 50% !important;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
-        transition: all 0.3s ease !important;
-        transform: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-
-      /* Force positioning on all child elements */
-      elevenlabs-convai *,
-      elevenlabs-convai iframe,
-      elevenlabs-convai button,
-      elevenlabs-convai div {
-        position: relative !important;
-        border-radius: 50% !important;
-        width: 100% !important;
-        height: 100% !important;
-        max-width: none !important;
-        max-height: none !important;
-        transform: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-
-      /* Mobile optimizations */
-      @media (max-width: 768px) {
-        elevenlabs-convai {
-          bottom: 16px !important;
-          right: 16px !important;
-          width: 56px !important;
-          height: 56px !important;
-        }
-      }
-
-      /* Small mobile devices */
-      @media (max-width: 480px) {
-        elevenlabs-convai {
-          bottom: 12px !important;
-          right: 12px !important;
-          width: 50px !important;
-          height: 50px !important;
-        }
-      }
-
-      /* Hover effects for desktop only */
-      @media (min-width: 769px) {
-        elevenlabs-convai:hover {
-          transform: scale(1.05) !important;
-          box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3) !important;
-        }
-      }
-
-      /* Ensure proper interaction */
-      elevenlabs-convai {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-      }
-      
-      elevenlabs-convai * {
-        pointer-events: auto !important;
-        cursor: pointer !important;
-      }
-
-      /* Override any conflicting styles */
-      elevenlabs-convai[style] {
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        left: auto !important;
-        top: auto !important;
-      }
     </style>
   </head>
   <body>
     <div id="root"></div>
 
-    <!-- ElevenLabs ConvoAI Widget -->
-    <elevenlabs-convai agent-id="agent_01jxcd8ch5fzd801q9k9g6q8b3"></elevenlabs-convai>
+    <!-- ElevenLabs ConvoAI Widget with Tailwind positioning -->
+    <elevenlabs-convai 
+      agent-id="agent_01jxcd8ch5fzd801q9k9g6q8b3"
+      class="!fixed !bottom-5 !right-5 !w-15 !h-15 !rounded-full !shadow-lg !z-50 hover:!scale-105 hover:!shadow-xl !transition-all !duration-300 md:!w-16 md:!h-16 sm:!bottom-4 sm:!right-4 sm:!w-14 sm:!h-14">
+    </elevenlabs-convai>
     <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     
     <!-- Bolt.new Badge -->
