@@ -18,7 +18,7 @@ interface SocketContextType {
   setUserName: (name: string) => void;
   joinRoom: (roomData: JoinRoomData) => void;
   leaveRoom: () => void;
-  sendMessage: (content: string, type?: 'text' | 'system' | 'ai-prompt' | 'mood-check') => void;
+  sendMessage: (text: string, type?: 'text' | 'system' | 'ai-prompt' | 'mood-check') => void;
   sendReaction: (messageId: string, emoji: string) => void;
   startTyping: () => void;
   stopTyping: () => void;
@@ -201,12 +201,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [roomId, isConnected, userId]);
 
-  const sendMessage = useCallback((content: string, type: 'text' | 'system' | 'ai-prompt' | 'mood-check' = 'text') => {
+  const sendMessage = useCallback((text: string, type: 'text' | 'system' | 'ai-prompt' | 'mood-check' = 'text') => {
     if (socket && roomId && isConnected) {
       const messagePayload = {
         session_id: roomId,
         sender: userName,
-        text: content,
+        text,
         user_id: userId,
         type: type
       };

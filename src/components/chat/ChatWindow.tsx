@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -38,7 +38,7 @@ const ChatWindow: React.FC = () => {
   const lastMessageRef = useRef<string | null>(null);
 
   // Combine real messages with optimistic messages for immediate display
-  const allMessages = [...messages, ...optimisticMessages];
+  const allMessages = useMemo(() => [...messages, ...optimisticMessages], [messages, optimisticMessages]);
 
   // Enhanced message sending with optimistic updates
   const handleSendMessage = (content: string) => {
@@ -128,8 +128,8 @@ const ChatWindow: React.FC = () => {
         if (allMessages.length > 0) {
           const lastMessage = allMessages[allMessages.length - 1];
           if (!lastMessage.isOptimistic) {
-            setLastReadMessageId(lastMessage.id);
-            setUnreadCount(0);
+            setLastReadMessageId(prevId => prevId !== lastMessage.id ? lastMessage.id : prevId);
+            setUnreadCount(prevCount => prevCount !== 0 ? 0 : prevCount);
           }
         }
       } else {
@@ -157,8 +157,8 @@ const ChatWindow: React.FC = () => {
       if (isNearBottom && allMessages.length > 0) {
         const lastMessage = allMessages[allMessages.length - 1];
         if (!lastMessage.isOptimistic) {
-          setLastReadMessageId(lastMessage.id);
-          setUnreadCount(0);
+          setLastReadMessageId(prevId => prevId !== lastMessage.id ? lastMessage.id : prevId);
+          setUnreadCount(prevCount => prevCount !== 0 ? 0 : prevCount);
         }
       }
     }
@@ -349,10 +349,13 @@ const ChatWindow: React.FC = () => {
               variant="outline"
               size="sm"
               className="glass-card border-white/20 text-white hover:bg-white/10 p-1.5 rounded-lg"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
-              <Brain className="h-3 w-3" />
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Brain className="h-3 w-3" />
+              </motion.div>
             </Button>
             
             <Button
