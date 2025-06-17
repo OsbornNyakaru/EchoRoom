@@ -281,32 +281,15 @@ const Room: React.FC = () => {
     }
   }, [isConnected]);
 
-  // Fetch sessions from backend
+  // Load predefined sessions (no backend required)
   useEffect(() => {
-    const fetchSessions = async () => {
+    const loadSessions = () => {
       try {
         setIsLoading(true);
-        console.log('[Room.tsx] Fetching sessions from backend...');
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'}/api/sessions`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data: ChatSession[] = await response.json();
-        console.log('[Room.tsx] Fetched sessions:', data);
-        setSessions(data);
-
-        // Auto-join based on mood if available
-        if (mood && data.length > 0 && !activeSessionId) {
-          const sessionForMood = data.find(s => s.category.toLowerCase() === mood.toLowerCase());
-          if (sessionForMood) {
-            console.log(`[Room.tsx] Auto-joining session for mood "${mood}": ${sessionForMood.id}`);
-            handleJoinSession(sessionForMood.id, sessionForMood.category);
-          }
-        }
-      } catch (error) {
-        console.error('[Room.tsx] Error fetching sessions:', error);
-        // Fallback to hardcoded sessions if API fails
-        const fallbackSessions: ChatSession[] = [
+        console.log('[Room.tsx] Loading predefined sessions...');
+        
+        // Use predefined sessions instead of fetching from backend
+        const predefinedSessions: ChatSession[] = [
           {
             id: "3c0baaf2-45d5-4986-8a56-e205ad9e1c4f",
             category: "Motivated",
@@ -347,23 +330,35 @@ const Room: React.FC = () => {
             id: "60df81b2-2d61-47fa-8988-9165d3b3f793",
             category: "Books",
             created_at: "2025-06-08T14:26:03.683316+00:00",
-            description: null
+            description: "Discuss your favorite reads"
           }
         ];
-        setSessions(fallbackSessions);
-        console.log('[Room.tsx] Using fallback sessions');
+        
+        setSessions(predefinedSessions);
+        console.log('[Room.tsx] Loaded predefined sessions:', predefinedSessions);
+
+        // Auto-join based on mood if available
+        if (mood && predefinedSessions.length > 0 && !activeSessionId) {
+          const sessionForMood = predefinedSessions.find(s => s.category.toLowerCase() === mood.toLowerCase());
+          if (sessionForMood) {
+            console.log(`[Room.tsx] Auto-joining session for mood "${mood}": ${sessionForMood.id}`);
+            handleJoinSession(sessionForMood.id, sessionForMood.category);
+          }
+        }
+      } catch (error) {
+        console.error('[Room.tsx] Error loading sessions:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchSessions();
+    loadSessions();
   }, [mood]);
 
   // Handle joining a session
   const handleJoinSession = useCallback((sessionId: string, sessionCategory: string) => {
-    if (!socket || !userId || !userName || !isConnected) {
-      console.warn('[Room.tsx] Cannot join: Socket not connected or user info missing.');
+    if (!socket || !userId || !userName) {
+      console.warn('[Room.tsx] Cannot join: Socket not available or user info missing.');
       return;
     }
     
@@ -372,7 +367,7 @@ const Room: React.FC = () => {
       setActiveSessionId(sessionId);
       joinRoom({ roomId: sessionId, userId: userId, userName: userName, mood: sessionCategory });
     }
-  }, [activeSessionId, joinRoom, userId, userName, socket, isConnected]);
+  }, [activeSessionId, joinRoom, userId, userName, socket]);
 
   // Handle leaving room
   const handleLeaveRoom = useCallback(() => {
@@ -436,7 +431,7 @@ const Room: React.FC = () => {
           sessions={sessions}
           activeSessionId={activeSessionId}
           onJoinSession={handleJoinSession}
-          isConnected={isConnected}
+          isConnected={true} // Always allow selection since we're not dependent on backend
         />
 
         {/* View Toggles for Mobile */}
