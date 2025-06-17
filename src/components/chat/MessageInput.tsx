@@ -1,42 +1,75 @@
-import React, { useState, KeyboardEvent } from 'react';
-import { SendHorizonal } from 'lucide-react';
+import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Send, Smile, Paperclip, Mic, WifiOff } from 'lucide-react';
 import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
+  disabled?: boolean;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
+  disabled = false,
 }) => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const typingTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${Math.min(inputRef.current.scrollHeight, 120)}px`;
+    }
+  }, [message]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (disabled) return;
+    
     setMessage(e.target.value);
+    
+    // Handle typing indicators
     if (e.target.value.length > 0 && !isTyping) {
       onTypingStart();
       setIsTyping(true);
     }
+    
+    // Clear existing timeout
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
+    
+    // Set new timeout to stop typing
     typingTimeoutRef.current = setTimeout(() => {
       onTypingStop();
       setIsTyping(false);
-    }, 1500); // Stop typing after 1.5 seconds of no input
+    }, 1500);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (message.trim()) {
-      onSendMessage(message.trim());
+    if (!disabled) {
+      sendMessage();
+    }
+  };
+
+  const sendMessage = () => {
+    if (disabled) return;
+    
+    const trimmedMessage = message.trim();
+    if (trimmedMessage) {
+      onSendMessage(trimmedMessage);
       setMessage('');
+      
+      // Clear typing state
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -47,31 +80,120 @@ const MessageInput: React.FC<MessageInputProps> = ({
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) { // Prevent new line on Enter, send message
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (disabled) return;
+    
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e as unknown as React.FormEvent<HTMLFormElement>); // Cast to FormEvent
+      sendMessage();
     }
   };
 
+  const quickReplies = ['👍', '❤️', '😂', '🤔', '👏'];
+
   return (
-    <form onSubmit={handleSubmit} className="flex p-4 border-t border-gray-700 bg-gray-800">
-      <input
-        type="text"
-        value={message}
-        onChange={handleInputChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Type your message..."
-        className="flex-grow p-3 rounded-l-lg bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-white placeholder-gray-400"
-      />
-      <Button
-        type="submit"
-        className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-r-lg flex items-center justify-center transition-colors duration-200"
+    <div className="p-4">
+      {/* Connection Status Warning */}
+      {disabled && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-red-500/20 border border-red-500/30"
+        >
+          <WifiOff className="h-4 w-4 text-red-400" />
+          <span className="text-red-400 text-sm">Connection lost. Reconnecting...</span>
+        </motion.div>
+      )}
+
+      {/* Quick Reactions */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: isFocused && !disabled ? 1 : 0, y: isFocused && !disabled ? 0 : 10 }}
+        className="flex gap-2 mb-3 overflow-x-auto"
       >
-        <SendHorizonal className="h-5 w-5" />
-      </Button>
-    </form>
+        {quickReplies.map((emoji) => (
+          <Button
+            key={emoji}
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            className="glass-card border-white/20 text-white hover:bg-white/10 flex-shrink-0"
+            onClick={() => !disabled && onSendMessage(emoji)}
+          >
+            {emoji}
+          </Button>
+        ))}
+      </motion.div>
+
+      {/* Message Input Form */}
+      <form onSubmit={handleSubmit} className="flex items-end gap-3">
+        <div className="flex-1 relative">
+          <textarea
+            ref={inputRef}
+            value={message}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            disabled={disabled}
+            placeholder={disabled ? "Reconnecting..." : "Type your message..."}
+            className={cn(
+              'w-full p-3 pr-12 rounded-2xl resize-none transition-all duration-200',
+              'glass-card border border-white/20 text-white placeholder-gray-400',
+              'focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20',
+              'min-h-[48px] max-h-[120px]',
+              disabled && 'opacity-50 cursor-not-allowed'
+            )}
+            rows={1}
+            maxLength={500}
+          />
+          
+          {/* Character count */}
+          {message.length > 0 && (
+            <div className="absolute bottom-1 right-3 text-xs text-gray-400">
+              {message.length}/500
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
+          >
+            <Mic className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            type="submit"
+            disabled={!message.trim() || disabled}
+            className={cn(
+              'p-2 rounded-xl transition-all duration-200',
+              message.trim() && !disabled
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg'
+                : 'glass-card border-white/20 text-gray-400 cursor-not-allowed'
+            )}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
-export default MessageInput; 
+export default MessageInput;
