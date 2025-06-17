@@ -15,6 +15,7 @@ interface SocketContextType {
   typingUsers: TypingUser[];
   userId: string;
   userName: string;
+  setUserName: (name: string) => void;
   joinRoom: (roomData: JoinRoomData) => void;
   leaveRoom: () => void;
   sendMessage: (content: string, type?: 'text' | 'system' | 'ai-prompt' | 'mood-check') => void;
@@ -34,44 +35,104 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   const userIdRef = useRef<string>(localStorage.getItem('echoroom_userId') || `user-${Math.random().toString(36).substring(2, 9)}`);
-  const userNameRef = useRef<string>(localStorage.getItem('echoroom_userName') || generateAnonymousUserName());
+  const [userName, setUserNameState] = useState<string>(localStorage.getItem('echoroom_userName') || generateAnonymousUserName());
 
   // Persist userId and userName in localStorage
   useEffect(() => {
     localStorage.setItem('echoroom_userId', userIdRef.current);
-    localStorage.setItem('echoroom_userName', userNameRef.current);
+    localStorage.setItem('echoroom_userName', userName);
+  }, [userName]);
+
+  const setUserName = useCallback((name: string) => {
+    setUserNameState(name);
+    localStorage.setItem('echoroom_userName', name);
   }, []);
 
   // Event Emitters (Frontend -> Backend)
-  const joinRoom = useCallback((roomData: JoinRoomData) => {
+  const joinRoom = useCallback(async (roomData: JoinRoomData) => {
     if (socket && isConnected) {
-      const dataToSend = { 
-        session_id: roomData.roomId,
-        user_id: userIdRef.current, 
-        username: userNameRef.current,
-        mood: roomData.mood
-      };
-      console.log('[SocketContext] Emitting joinRoom with data:', dataToSend);
-      socket.emit('joinRoom', dataToSend);
+      try {
+        // First, create/update participant in database
+        const participantData = {
+          user_id: userIdRef.current,
+          session_id: roomData.roomId,
+          user_name: roomData.userName,
+          mood: roomData.mood,
+          avatar: '/avatars/default-avatar.png',
+          is_speaking: false,
+          is_muted: false
+        };
+
+        console.log('[SocketContext] Creating participant in database:', participantData);
+        
+        const response = await fetch('http://localhost:5000/api/participants', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(participantData),
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to create participant: ${response.status}`);
+        }
+
+        const participant = await response.json();
+        console.log('[SocketContext] Participant created:', participant);
+
+        // Then emit socket event to join room
+        const dataToSend = { 
+          session_id: roomData.roomId,
+          user_id: userIdRef.current, 
+          username: roomData.userName,
+          mood: roomData.mood
+        };
+        console.log('[SocketContext] Emitting joinRoom with data:', dataToSend);
+        socket.emit('joinRoom', dataToSend);
+        
+      } catch (error) {
+        console.error('[SocketContext] Error joining room:', error);
+      }
     } else {
       console.warn('[SocketContext] Cannot join room: socket not connected');
     }
   }, [isConnected]);
 
-  const leaveRoom = useCallback(() => {
+  const leaveRoom = useCallback(async () => {
     if (socket && roomId && isConnected) {
-      const dataToSend = { 
-        session_id: roomId, 
-        user_id: userIdRef.current 
-      };
-      console.log('[SocketContext] Emitting leaveRoom with data:', dataToSend);
-      socket.emit('leaveRoom', dataToSend);
-      
-      // Clear local state
-      setRoomId(null);
-      setParticipants([]);
-      setMessages([]);
-      setTypingUsers([]);
+      try {
+        // Update participant status in database
+        const response = await fetch(`http://localhost:5000/api/participants/${userIdRef.current}/${roomId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            is_speaking: false,
+            is_muted: false
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn('[SocketContext] Failed to update participant status on leave');
+        }
+
+        // Emit socket event to leave room
+        const dataToSend = { 
+          session_id: roomId, 
+          user_id: userIdRef.current 
+        };
+        console.log('[SocketContext] Emitting leaveRoom with data:', dataToSend);
+        socket.emit('leaveRoom', dataToSend);
+        
+        // Clear local state
+        setRoomId(null);
+        setParticipants([]);
+        setMessages([]);
+        setTypingUsers([]);
+      } catch (error) {
+        console.error('[SocketContext] Error leaving room:', error);
+      }
     }
   }, [roomId, isConnected]);
 
@@ -79,7 +140,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && roomId && isConnected) {
       const messagePayload = {
         session_id: roomId,
-        sender: userNameRef.current,
+        sender: userName,
         text: content,
         user_id: userIdRef.current,
         type: type
@@ -87,7 +148,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.log('[SocketContext] Emitting sendMessage with payload:', messagePayload);
       socket.emit('sendMessage', messagePayload);
     }
-  }, [roomId, isConnected]);
+  }, [roomId, isConnected, userName]);
 
   const sendReaction = useCallback((messageId: string, emoji: string) => {
     if (socket && isConnected) {
@@ -106,12 +167,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const dataToSend = { 
         session_id: roomId, 
         user_id: userIdRef.current, 
-        username: userNameRef.current 
+        username: userName 
       };
       console.log('[SocketContext] Emitting typing-start with data:', dataToSend);
       socket.emit('typing-start', dataToSend);
     }
-  }, [roomId, isConnected]);
+  }, [roomId, isConnected, userName]);
 
   const stopTyping = useCallback(() => {
     if (socket && roomId && isConnected) {
@@ -124,26 +185,47 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [roomId, isConnected]);
 
-  const updateVoiceStatus = useCallback((isSpeaking: boolean, isMuted: boolean) => {
-    if (socket && isConnected) {
-      const dataToSend = { 
-        userId: userIdRef.current, 
-        isSpeaking, 
-        isMuted 
-      };
-      console.log('[SocketContext] Emitting voice-status with data:', dataToSend);
-      socket.emit('voice-status', dataToSend);
-      
-      // Update local participant state immediately for better UX
-      setParticipants(prev => 
-        prev.map(p => 
-          p.userId === userIdRef.current 
-            ? { ...p, isSpeaking, isMuted }
-            : p
-        )
-      );
+  const updateVoiceStatus = useCallback(async (isSpeaking: boolean, isMuted: boolean) => {
+    if (socket && isConnected && roomId) {
+      try {
+        // Update participant voice status in database
+        const response = await fetch(`http://localhost:5000/api/participants/${userIdRef.current}/${roomId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            is_speaking: isSpeaking,
+            is_muted: isMuted
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn('[SocketContext] Failed to update voice status in database');
+        }
+
+        // Emit socket event
+        const dataToSend = { 
+          userId: userIdRef.current, 
+          isSpeaking, 
+          isMuted 
+        };
+        console.log('[SocketContext] Emitting voice-status with data:', dataToSend);
+        socket.emit('voice-status', dataToSend);
+        
+        // Update local participant state immediately for better UX
+        setParticipants(prev => 
+          prev.map(p => 
+            p.userId === userIdRef.current 
+              ? { ...p, isSpeaking, isMuted }
+              : p
+          )
+        );
+      } catch (error) {
+        console.error('[SocketContext] Error updating voice status:', error);
+      }
     }
-  }, [isConnected]);
+  }, [isConnected, roomId]);
 
   // Event Listeners (Backend -> Frontend)
   useEffect(() => {
@@ -156,11 +238,19 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         setRoomId(data.session_id);
       }
       
-      // Handle participants data
+      // Handle participants data from database
       if (data.participants) {
-        setParticipants(data.participants);
+        const convertedParticipants = data.participants.map((participant: any) => ({
+          userId: participant.user_id,
+          userName: participant.user_name,
+          avatar: participant.avatar || '/avatars/default-avatar.png',
+          mood: participant.mood || 'calm',
+          isSpeaking: participant.is_speaking || false,
+          isMuted: participant.is_muted || false,
+        }));
+        setParticipants(convertedParticipants);
       } else if (data.users) {
-        // Convert users array to participants format
+        // Fallback for legacy format
         const convertedParticipants = data.users.map((user: any) => ({
           userId: user.user_id || user.id,
           userName: user.username || user.name,
@@ -202,11 +292,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       const newParticipant: Participant = {
         userId: data.user_id || data.id,
-        userName: data.username || data.name,
+        userName: data.username || data.user_name || data.name,
         avatar: data.avatar || '/avatars/default-avatar.png',
         mood: data.mood || 'calm',
-        isSpeaking: false,
-        isMuted: false,
+        isSpeaking: data.is_speaking || false,
+        isMuted: data.is_muted || false,
       };
       
       setParticipants(prev => {
@@ -303,7 +393,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     messages,
     typingUsers,
     userId: userIdRef.current,
-    userName: userNameRef.current,
+    userName,
+    setUserName,
     joinRoom,
     leaveRoom,
     sendMessage,

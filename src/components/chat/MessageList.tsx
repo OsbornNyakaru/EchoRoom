@@ -93,7 +93,7 @@ const MessageBubble: React.FC<{
         )}
 
         {/* Message bubble */}
-        <div
+        <motion.div
           className={cn(
             'px-4 py-2 rounded-2xl relative group-hover:shadow-lg transition-all duration-200',
             isCurrentUser
@@ -101,6 +101,8 @@ const MessageBubble: React.FC<{
               : 'glass-card text-white rounded-bl-md',
             isConsecutive && (isCurrentUser ? 'rounded-tr-md' : 'rounded-tl-md')
           )}
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 300 }}
         >
           <p className="text-sm leading-relaxed break-words">{message.content}</p>
           
@@ -112,7 +114,8 @@ const MessageBubble: React.FC<{
                   key={index}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1"
+                  whileHover={{ scale: 1.1 }}
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer"
                 >
                   <span>{reaction.emoji}</span>
                   <span className="text-white/80">{reaction.count}</span>
@@ -125,7 +128,7 @@ const MessageBubble: React.FC<{
           {message.isEdited && (
             <span className="text-xs text-white/60 italic mt-1 block">edited</span>
           )}
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   );

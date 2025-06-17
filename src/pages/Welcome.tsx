@@ -7,6 +7,7 @@ import { Card } from "../components/ui/card"
 import { Button } from "../components/ui/button"
 import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2 } from "lucide-react"
 import FloatingParticles from "../components/floating-particles"
+import UserNameModal from "../components/UserNameModal"
 import { useSocketContext } from "../context/SocketContext"
 
 interface ChatSession {
@@ -21,11 +22,13 @@ export default function Welcome() {
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
   const mood = searchParams.get("mood") || "calm"
-  const { joinRoom, userId, userName, isConnected } = useSocketContext()
+  const { joinRoom, userId, userName, setUserName, isConnected } = useSocketContext()
 
   const welcomeVideoRef = useRef<HTMLVideoElement>(null);
   const [isVideoFinished, setIsVideoFinished] = useState(false);
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+  const [showUserNameModal, setShowUserNameModal] = useState(false);
+  const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
 
   const validMoods = ["hopeful", "lonely", "motivated", "calm", "loving", "joyful"]
   const validatedMood = validMoods.includes(mood) ? mood : "calm"
@@ -38,7 +41,7 @@ export default function Welcome() {
   const [hasUserManuallyJoined, setHasUserManuallyJoined] = useState(false);
 
   const handleJoinRoom = useCallback(async () => {
-    if (!isConnected || !userId || !userName) {
+    if (!isConnected || !userId) {
       console.warn('[Welcome.tsx] Cannot join room: Socket not connected or user info missing');
       return;
     }
@@ -64,17 +67,10 @@ export default function Welcome() {
 
       if (matchingSession) {
         console.log(`[Welcome.tsx] Found matching session for mood "${validatedMood}":`, matchingSession);
+        setSelectedSession(matchingSession);
         
-        // Join the room using the socket context
-        joinRoom({
-          roomId: matchingSession.id,
-          userId: userId,
-          userName: userName,
-          mood: validatedMood
-        });
-
-        // Navigate to the room page
-        navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+        // Show user name modal before joining
+        setShowUserNameModal(true);
       } else {
         console.warn(`[Welcome.tsx] No session found for mood "${validatedMood}"`);
         // Fallback: navigate to room page anyway, let user select manually
@@ -87,7 +83,41 @@ export default function Welcome() {
     } finally {
       setIsJoiningRoom(false);
     }
-  }, [navigate, validatedMood, joinRoom, userId, userName, isConnected]);
+  }, [navigate, validatedMood, userId, isConnected]);
+
+  const handleUserNameConfirm = useCallback(async (confirmedUserName: string) => {
+    if (!selectedSession) return;
+
+    try {
+      setIsJoiningRoom(true);
+      
+      // Update the user name in context
+      setUserName(confirmedUserName);
+      
+      // Join the room using the socket context
+      await joinRoom({
+        roomId: selectedSession.id,
+        userId: userId,
+        userName: confirmedUserName,
+        mood: validatedMood
+      });
+
+      // Navigate to the room page
+      navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+    } catch (error) {
+      console.error('[Welcome.tsx] Error joining room:', error);
+      navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+    } finally {
+      setShowUserNameModal(false);
+      setIsJoiningRoom(false);
+    }
+  }, [selectedSession, setUserName, joinRoom, userId, validatedMood, navigate]);
+
+  const handleUserNameCancel = useCallback(() => {
+    setShowUserNameModal(false);
+    setSelectedSession(null);
+    setIsJoiningRoom(false);
+  }, []);
 
   const moodColors = {
     hopeful: "#FFE66D",
@@ -364,6 +394,14 @@ export default function Welcome() {
           </Card>
         </motion.div>
       </div>
+
+      {/* User Name Modal */}
+      <UserNameModal
+        isOpen={showUserNameModal}
+        onConfirm={handleUserNameConfirm}
+        onCancel={handleUserNameCancel}
+        mood={validatedMood}
+      />
     </div>
   )
 }
