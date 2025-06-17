@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday, differenceInMinutes } from 'date-fns';
-import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile } from 'lucide-react';
+import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile, Clock, Loader2 } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -16,6 +16,7 @@ interface ChatMessage {
   reactions: MessageReaction[];
   isEdited?: boolean;
   replyTo?: string;
+  isOptimistic?: boolean; // For immediate display of user's own messages
 }
 
 interface MessageReaction {
@@ -186,7 +187,9 @@ const MessageBubble: React.FC<{
                 : 'rounded-br-md'
               : isConsecutive 
                 ? 'rounded-bl-md' 
-                : 'rounded-bl-md'
+                : 'rounded-bl-md',
+            // Optimistic message styling
+            message.isOptimistic && 'opacity-80'
           )}
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 300 }}
@@ -196,7 +199,20 @@ const MessageBubble: React.FC<{
           } : {}}
         >
           {/* Message content */}
-          <p className="text-sm leading-relaxed">{message.content}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm leading-relaxed flex-1">{message.content}</p>
+            
+            {/* Optimistic message indicator */}
+            {message.isOptimistic && (
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="flex-shrink-0"
+              >
+                <Clock className="w-3 h-3 text-white/60" />
+              </motion.div>
+            )}
+          </div>
           
           {/* Reactions */}
           {message.reactions && message.reactions.length > 0 && (

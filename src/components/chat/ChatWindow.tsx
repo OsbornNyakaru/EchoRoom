@@ -33,36 +33,87 @@ const ChatWindow: React.FC = () => {
   const [lastReadMessageId, setLastReadMessageId] = useState<string | null>(null);
   const [messageStats, setMessageStats] = useState({ total: 0, today: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<string | null>(null);
 
-  // Track unread messages with advanced logic
+  // Combine real messages with optimistic messages for immediate display
+  const allMessages = [...messages, ...optimisticMessages];
+
+  // Enhanced message sending with optimistic updates
+  const handleSendMessage = (content: string) => {
+    if (!content.trim() || !userId || !roomId) return;
+
+    // Create optimistic message for immediate display
+    const optimisticMessage = {
+      id: `optimistic-${Date.now()}-${Math.random()}`,
+      userId: userId,
+      userName: participants.find(p => p.userId === userId)?.userName || 'You',
+      avatar: participants.find(p => p.userId === userId)?.avatar || '/avatars/default-avatar.png',
+      content: content.trim(),
+      type: 'text' as const,
+      timestamp: new Date(),
+      reactions: [],
+      isOptimistic: true
+    };
+
+    // Add to optimistic messages immediately
+    setOptimisticMessages(prev => [...prev, optimisticMessage]);
+
+    // Send the actual message
+    sendMessage(content);
+
+    // Remove optimistic message after a delay (it should be replaced by real message)
+    setTimeout(() => {
+      setOptimisticMessages(prev => 
+        prev.filter(msg => msg.id !== optimisticMessage.id)
+      );
+    }, 5000); // Remove after 5 seconds if not replaced
+  };
+
+  // Clean up optimistic messages when real messages arrive
   useEffect(() => {
     if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
+      const latestMessage = messages[messages.length - 1];
+      const latestMessageTime = new Date(latestMessage.timestamp).getTime();
+      
+      // Remove optimistic messages that are older than the latest real message
+      setOptimisticMessages(prev => 
+        prev.filter(msg => {
+          const msgTime = new Date(msg.timestamp).getTime();
+          return msgTime > latestMessageTime;
+        })
+      );
+    }
+  }, [messages]);
+
+  // Track unread messages with advanced logic
+  useEffect(() => {
+    if (allMessages.length > 0) {
+      const lastMessage = allMessages[allMessages.length - 1];
       if (lastMessage.id !== lastMessageRef.current) {
         lastMessageRef.current = lastMessage.id;
         
         // If message is not from current user and user hasn't read it
-        if (lastMessage.userId !== userId && lastMessage.id !== lastReadMessageId) {
+        if (lastMessage.userId !== userId && lastMessage.id !== lastReadMessageId && !lastMessage.isOptimistic) {
           setUnreadCount(prev => prev + 1);
         }
       }
     }
-  }, [messages, userId, lastReadMessageId]);
+  }, [allMessages, userId, lastReadMessageId]);
 
   // Update message statistics
   useEffect(() => {
     const today = new Date().toDateString();
-    const todayMessages = messages.filter(msg => 
-      new Date(msg.timestamp).toDateString() === today
+    const todayMessages = allMessages.filter(msg => 
+      new Date(msg.timestamp).toDateString() === today && !msg.isOptimistic
     ).length;
     
     setMessageStats({
-      total: messages.length,
+      total: messages.length, // Only count real messages for stats
       today: todayMessages
     });
-  }, [messages]);
+  }, [allMessages, messages]);
 
   // Enhanced auto-scroll with smart detection
   useEffect(() => {
@@ -74,29 +125,41 @@ const ChatWindow: React.FC = () => {
         container.scrollTop = container.scrollHeight;
         setShowScrollToBottom(false);
         // Mark messages as read when scrolled to bottom
-        if (messages.length > 0) {
-          const lastMessage = messages[messages.length - 1];
-          setLastReadMessageId(lastMessage.id);
-          setUnreadCount(0);
+        if (allMessages.length > 0) {
+          const lastMessage = allMessages[allMessages.length - 1];
+          if (!lastMessage.isOptimistic) {
+            setLastReadMessageId(lastMessage.id);
+            setUnreadCount(0);
+          }
         }
       } else {
         setShowScrollToBottom(true);
       }
     }
-  }, [messages]);
+  }, [allMessages]);
+
+  // Auto-scroll to bottom when user sends a message
+  useEffect(() => {
+    if (optimisticMessages.length > 0 && messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [optimisticMessages]);
 
   // Enhanced scroll handler
   const handleScroll = () => {
     if (messagesContainerRef.current) {
       const container = messagesContainerRef.current;
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-      setShowScrollToBottom(!isNearBottom && messages.length > 0);
+      setShowScrollToBottom(!isNearBottom && allMessages.length > 0);
       
       // Mark as read when scrolled to bottom
-      if (isNearBottom && messages.length > 0) {
-        const lastMessage = messages[messages.length - 1];
-        setLastReadMessageId(lastMessage.id);
-        setUnreadCount(0);
+      if (isNearBottom && allMessages.length > 0) {
+        const lastMessage = allMessages[allMessages.length - 1];
+        if (!lastMessage.isOptimistic) {
+          setLastReadMessageId(lastMessage.id);
+          setUnreadCount(0);
+        }
       }
     }
   };
@@ -328,7 +391,7 @@ const ChatWindow: React.FC = () => {
           className="h-full overflow-y-auto custom-scrollbar"
         >
           <AnimatePresence mode="popLayout">
-            {messages.length === 0 ? (
+            {allMessages.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -389,7 +452,7 @@ const ChatWindow: React.FC = () => {
                 </div>
               </motion.div>
             ) : (
-              <MessageList messages={messages} currentUserId={userId} participants={participants} />
+              <MessageList messages={allMessages} currentUserId={userId} participants={participants} />
             )}
           </AnimatePresence>
         </div>
@@ -462,7 +525,7 @@ const ChatWindow: React.FC = () => {
       {/* Revolutionary Message Input */}
       <div className="border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm">
         <MessageInput
-          onSendMessage={sendMessage}
+          onSendMessage={handleSendMessage}
           onTypingStart={startTyping}
           onTypingStop={stopTyping}
           currentUser={currentUser}
