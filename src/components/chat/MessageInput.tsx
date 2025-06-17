@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Smile, Paperclip, Mic, WifiOff } from 'lucide-react';
+import { Send, Smile, Paperclip, Mic } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
@@ -8,14 +8,12 @@ interface MessageInputProps {
   onSendMessage: (content: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
-  disabled?: boolean;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
-  disabled = false,
 }) => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -32,8 +30,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   }, [message]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (disabled) return;
-    
     setMessage(e.target.value);
     
     // Handle typing indicators
@@ -56,14 +52,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!disabled) {
-      sendMessage();
-    }
+    sendMessage();
   };
 
   const sendMessage = () => {
-    if (disabled) return;
-    
     const trimmedMessage = message.trim();
     if (trimmedMessage) {
       onSendMessage(trimmedMessage);
@@ -81,8 +73,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (disabled) return;
-    
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
@@ -93,22 +83,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
 
   return (
     <div className="p-4">
-      {/* Connection Status Warning */}
-      {disabled && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 mb-3 p-2 rounded-lg bg-red-500/20 border border-red-500/30"
-        >
-          <WifiOff className="h-4 w-4 text-red-400" />
-          <span className="text-red-400 text-sm">Connection lost. Reconnecting...</span>
-        </motion.div>
-      )}
-
       {/* Quick Reactions */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: isFocused && !disabled ? 1 : 0, y: isFocused && !disabled ? 0 : 10 }}
+        animate={{ opacity: isFocused ? 1 : 0, y: isFocused ? 0 : 10 }}
         className="flex gap-2 mb-3 overflow-x-auto"
       >
         {quickReplies.map((emoji) => (
@@ -116,9 +94,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
             key={emoji}
             variant="outline"
             size="sm"
-            disabled={disabled}
             className="glass-card border-white/20 text-white hover:bg-white/10 flex-shrink-0"
-            onClick={() => !disabled && onSendMessage(emoji)}
+            onClick={() => onSendMessage(emoji)}
           >
             {emoji}
           </Button>
@@ -135,17 +112,14 @@ const MessageInput: React.FC<MessageInputProps> = ({
             onKeyDown={handleKeyDown}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
-            disabled={disabled}
-            placeholder={disabled ? "Reconnecting..." : "Type your message..."}
+            placeholder="Type your message..."
             className={cn(
               'w-full p-3 pr-12 rounded-2xl resize-none transition-all duration-200',
               'glass-card border border-white/20 text-white placeholder-gray-400',
               'focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20',
-              'min-h-[48px] max-h-[120px]',
-              disabled && 'opacity-50 cursor-not-allowed'
+              'min-h-[48px] max-h-[120px]'
             )}
             rows={1}
-            maxLength={500}
           />
           
           {/* Character count */}
@@ -162,7 +136,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            disabled={disabled}
             className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
           >
             <Paperclip className="h-4 w-4" />
@@ -172,7 +145,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
             type="button"
             variant="outline"
             size="sm"
-            disabled={disabled}
             className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
           >
             <Mic className="h-4 w-4" />
@@ -180,10 +152,10 @@ const MessageInput: React.FC<MessageInputProps> = ({
           
           <Button
             type="submit"
-            disabled={!message.trim() || disabled}
+            disabled={!message.trim()}
             className={cn(
               'p-2 rounded-xl transition-all duration-200',
-              message.trim() && !disabled
+              message.trim()
                 ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg'
                 : 'glass-card border-white/20 text-gray-400 cursor-not-allowed'
             )}

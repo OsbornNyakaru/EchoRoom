@@ -4,12 +4,12 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import TypingIndicator from './TypingIndicator';
 import { useSocketContext } from '../../context/SocketContext';
-import { MessageSquare, Users, Settings, Maximize2, Minimize2, Wifi, WifiOff } from 'lucide-react';
+import { MessageSquare, Users, Settings, Maximize2, Minimize2 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
 const ChatWindow: React.FC = () => {
-  const { messages, typingUsers, sendMessage, startTyping, stopTyping, userId, participants, roomId, isConnected } = useSocketContext();
+  const { messages, typingUsers, sendMessage, startTyping, stopTyping, userId, participants, roomId } = useSocketContext();
   const [isExpanded, setIsExpanded] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -54,24 +54,9 @@ const ChatWindow: React.FC = () => {
           </div>
           <div>
             <h2 className="text-lg font-semibold text-white">Room Chat</h2>
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-gray-400">
-                {participants.length} participant{participants.length !== 1 ? 's' : ''} online
-              </p>
-              <div className="flex items-center gap-1">
-                {isConnected ? (
-                  <Wifi className="h-3 w-3 text-green-400" />
-                ) : (
-                  <WifiOff className="h-3 w-3 text-red-400" />
-                )}
-                <span className={cn(
-                  'text-xs',
-                  isConnected ? 'text-green-400' : 'text-red-400'
-                )}>
-                  {isConnected ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-            </div>
+            <p className="text-xs text-gray-400">
+              {participants.length} participant{participants.length !== 1 ? 's' : ''} online
+            </p>
           </div>
         </div>
         
@@ -138,7 +123,6 @@ const ChatWindow: React.FC = () => {
           onSendMessage={sendMessage}
           onTypingStart={startTyping}
           onTypingStop={stopTyping}
-          disabled={!isConnected}
         />
       </div>
     </motion.div>

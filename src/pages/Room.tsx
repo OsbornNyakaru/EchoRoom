@@ -5,7 +5,7 @@ import { useSocketContext } from '../context/SocketContext';
 import ChatWindow from '../components/chat/ChatWindow';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MessageSquare, Users, Mic, MicOff, Volume2, VolumeX, Settings, LogOut, Clock, Sparkles, Wifi, WifiOff } from 'lucide-react';
+import { MessageSquare, Users, Mic, MicOff, Volume2, VolumeX, Settings, LogOut, Clock, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
@@ -69,7 +69,6 @@ const ParticipantCard: React.FC<{ participant: any; isCurrentUser: boolean }> = 
     calm: '#A3C4BC',
     loving: '#FF8FA3',
     joyful: '#FFD93D',
-    books: '#9B59B6',
   };
 
   const moodColor = moodColors[participant.mood?.toLowerCase() as keyof typeof moodColors] || '#A3C4BC';
@@ -192,17 +191,6 @@ const SessionSelector: React.FC<{
     calm: '#A3C4BC',
     loving: '#FF8FA3',
     joyful: '#FFD93D',
-    books: '#9B59B6',
-  };
-
-  const moodEmojis = {
-    hopeful: '🌅',
-    lonely: '🌙',
-    motivated: '⚡',
-    calm: '🧘',
-    loving: '💝',
-    joyful: '✨',
-    books: '📚',
   };
 
   return (
@@ -211,12 +199,10 @@ const SessionSelector: React.FC<{
         <Sparkles className="h-8 w-8 text-yellow-400" />
         Choose Your Room
       </h2>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {sessions.map((session) => {
           const isActive = session.id === activeSessionId;
-          const categoryLower = session.category.toLowerCase();
-          const moodColor = moodColors[categoryLower as keyof typeof moodColors] || '#A3C4BC';
-          const emoji = moodEmojis[categoryLower as keyof typeof moodEmojis] || '🌟';
+          const moodColor = moodColors[session.category.toLowerCase() as keyof typeof moodColors] || '#A3C4BC';
           
           return (
             <motion.button
@@ -237,7 +223,15 @@ const SessionSelector: React.FC<{
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.98 }}
             >
-              <div className="text-2xl mb-2">{emoji}</div>
+              <div className="text-2xl mb-2">
+                {session.category === 'Hopeful' && '🌅'}
+                {session.category === 'Lonely' && '🌙'}
+                {session.category === 'Motivated' && '⚡'}
+                {session.category === 'Calm' && '🧘'}
+                {session.category === 'Loving' && '💝'}
+                {session.category === 'Joyful' && '✨'}
+                {!['Hopeful', 'Lonely', 'Motivated', 'Calm', 'Loving', 'Joyful'].includes(session.category) && '📚'}
+              </div>
               <h3 className="text-white font-semibold text-sm mb-1">
                 {session.category}
               </h3>
@@ -281,84 +275,41 @@ const Room: React.FC = () => {
     }
   }, [isConnected]);
 
-  // Load predefined sessions (no backend required)
+  // Fetch sessions and attempt to join a room
   useEffect(() => {
-    const loadSessions = () => {
+    const fetchSessions = async () => {
       try {
         setIsLoading(true);
-        console.log('[Room.tsx] Loading predefined sessions...');
-        
-        // Use predefined sessions instead of fetching from backend
-        const predefinedSessions: ChatSession[] = [
-          {
-            id: "3c0baaf2-45d5-4986-8a56-e205ad9e1c4f",
-            category: "Motivated",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Ready to take on challenges"
-          },
-          {
-            id: "9dcaa32f-b371-4ebf-9153-8747a16e19b2",
-            category: "Hopeful",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Looking forward with optimism"
-          },
-          {
-            id: "ad209c8b-dde1-44e7-8642-7da4e1f8cfe3",
-            category: "Lonely",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Seeking connection and understanding"
-          },
-          {
-            id: "cd90792e-bb54-4a5b-b1b9-59fb27fbc49f",
-            category: "Joyful",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Filled with happiness and gratitude"
-          },
-          {
-            id: "647161c4-0bfc-4142-9f7a-fc6eefb17325",
-            category: "Calm",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Finding peace in the moment"
-          },
-          {
-            id: "5b169685-1790-493e-a569-3aeec7b60b33",
-            category: "Loving",
-            created_at: "2025-06-12T17:33:55.574268+00:00",
-            description: "Embracing warmth and compassion"
-          },
-          {
-            id: "60df81b2-2d61-47fa-8988-9165d3b3f793",
-            category: "Books",
-            created_at: "2025-06-08T14:26:03.683316+00:00",
-            description: "Discuss your favorite reads"
-          }
-        ];
-        
-        setSessions(predefinedSessions);
-        console.log('[Room.tsx] Loaded predefined sessions:', predefinedSessions);
+        console.log('[Room.tsx] Fetching sessions...');
+        const response = await fetch('http://localhost:5000/api/sessions');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: ChatSession[] = await response.json();
+        setSessions(data);
 
         // Auto-join based on mood if available
-        if (mood && predefinedSessions.length > 0 && !activeSessionId) {
-          const sessionForMood = predefinedSessions.find(s => s.category.toLowerCase() === mood.toLowerCase());
+        if (mood && data.length > 0 && !activeSessionId) {
+          const sessionForMood = data.find(s => s.category.toLowerCase() === mood.toLowerCase());
           if (sessionForMood) {
             console.log(`[Room.tsx] Auto-joining session for mood "${mood}": ${sessionForMood.id}`);
             handleJoinSession(sessionForMood.id, sessionForMood.category);
           }
         }
       } catch (error) {
-        console.error('[Room.tsx] Error loading sessions:', error);
+        console.error('[Room.tsx] Error fetching sessions:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadSessions();
-  }, [mood]);
+    fetchSessions();
+  }, [mood]); // Remove activeSessionId from dependencies to prevent infinite loops
 
   // Handle joining a session
   const handleJoinSession = useCallback((sessionId: string, sessionCategory: string) => {
-    if (!socket || !userId || !userName) {
-      console.warn('[Room.tsx] Cannot join: Socket not available or user info missing.');
+    if (!socket || !userId || !userName || !isConnected) {
+      console.warn('[Room.tsx] Cannot join: Socket not connected or user info missing.');
       return;
     }
     
@@ -367,7 +318,7 @@ const Room: React.FC = () => {
       setActiveSessionId(sessionId);
       joinRoom({ roomId: sessionId, userId: userId, userName: userName, mood: sessionCategory });
     }
-  }, [activeSessionId, joinRoom, userId, userName, socket]);
+  }, [activeSessionId, joinRoom, userId, userName, socket, isConnected]);
 
   // Handle leaving room
   const handleLeaveRoom = useCallback(() => {
@@ -407,11 +358,6 @@ const Room: React.FC = () => {
                   {connectionStatus === 'connected' ? 'Connected' : 
                    connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                 </span>
-                {connectionStatus === 'connected' ? (
-                  <Wifi className="h-4 w-4 text-green-400" />
-                ) : (
-                  <WifiOff className="h-4 w-4 text-red-400" />
-                )}
               </div>
             </div>
             
@@ -431,7 +377,7 @@ const Room: React.FC = () => {
           sessions={sessions}
           activeSessionId={activeSessionId}
           onJoinSession={handleJoinSession}
-          isConnected={true} // Always allow selection since we're not dependent on backend
+          isConnected={isConnected}
         />
 
         {/* View Toggles for Mobile */}
