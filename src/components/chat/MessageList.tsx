@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { format, isToday, isYesterday } from 'date-fns';
+import { format, isToday, isYesterday, differenceInMinutes } from 'date-fns';
+import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -23,9 +24,19 @@ interface MessageReaction {
   count: number;
 }
 
+interface Participant {
+  userId: string;
+  userName: string;
+  avatar: string;
+  mood: string;
+  isSpeaking: boolean;
+  isMuted: boolean;
+}
+
 interface MessageListProps {
   messages: ChatMessage[];
   currentUserId: string;
+  participants: Participant[];
 }
 
 const formatMessageTime = (date: Date) => {
@@ -38,22 +49,53 @@ const formatMessageTime = (date: Date) => {
   }
 };
 
+const getMoodIcon = (mood: string) => {
+  const icons = {
+    hopeful: Sun,
+    lonely: Moon,
+    motivated: Star,
+    calm: Coffee,
+    loving: Heart,
+    joyful: Smile,
+  };
+  return icons[mood?.toLowerCase() as keyof typeof icons] || Coffee;
+};
+
+const getMoodColor = (mood: string) => {
+  const colors = {
+    hopeful: '#FFE66D',
+    lonely: '#8E9AAF',
+    motivated: '#FFB4A2',
+    calm: '#A3C4BC',
+    loving: '#FF8FA3',
+    joyful: '#FFD93D',
+  };
+  return colors[mood?.toLowerCase() as keyof typeof colors] || '#A3C4BC';
+};
+
 const MessageBubble: React.FC<{
   message: ChatMessage;
   isCurrentUser: boolean;
   isConsecutive: boolean;
-}> = ({ message, isCurrentUser, isConsecutive }) => {
+  participant?: Participant;
+  showAvatar: boolean;
+}> = ({ message, isCurrentUser, isConsecutive, participant, showAvatar }) => {
   const isSystemMessage = message.type === 'system' || message.type === 'ai-prompt';
+  const moodColor = participant ? getMoodColor(participant.mood) : '#A3C4BC';
+  const MoodIcon = participant ? getMoodIcon(participant.mood) : Coffee;
   
   if (isSystemMessage) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex justify-center my-4"
+        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="flex justify-center my-6"
       >
-        <div className="glass-card px-4 py-2 rounded-full max-w-xs">
-          <p className="text-sm text-center text-gray-300">{message.content}</p>
+        <div className="glass-card px-6 py-3 rounded-full max-w-md border border-white/20">
+          <div className="flex items-center gap-2">
+            {message.type === 'ai-prompt' && <Bot className="h-4 w-4 text-blue-400" />}
+            <p className="text-sm text-center text-gray-300">{message.content}</p>
+          </div>
         </div>
       </motion.div>
     );
@@ -63,48 +105,98 @@ const MessageBubble: React.FC<{
     <motion.div
       initial={{ opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        'flex gap-3 mb-4 group',
-        isCurrentUser ? 'flex-row-reverse' : 'flex-row'
+        'flex gap-3 group relative',
+        isCurrentUser ? 'flex-row-reverse' : 'flex-row',
+        isConsecutive ? 'mb-1' : 'mb-4'
       )}
     >
       {/* Avatar */}
-      <div className={cn('flex-shrink-0', isConsecutive && 'invisible')}>
-        <Avatar className="w-8 h-8 border-2 border-white/20">
-          <AvatarImage src={message.avatar} alt={message.userName} />
-          <AvatarFallback className="bg-gradient-to-br from-blue-400 to-purple-500 text-white text-xs">
-            {message.userName?.charAt(0)?.toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
+      <div className={cn('flex-shrink-0', !showAvatar && 'invisible')}>
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          transition={{ type: "spring", stiffness: 400 }}
+        >
+          <Avatar className="w-10 h-10 border-2 border-white/20 shadow-lg">
+            <AvatarImage src={message.avatar} alt={message.userName} />
+            <AvatarFallback 
+              className="text-white font-semibold text-sm"
+              style={{ backgroundColor: moodColor + '60' }}
+            >
+              {message.userName?.charAt(0)?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+        </motion.div>
+        
+        {/* Mood indicator */}
+        {participant && showAvatar && (
+          <motion.div 
+            className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: moodColor + 'E0' }}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <MoodIcon className="w-2.5 h-2.5 text-white" />
+          </motion.div>
+        )}
       </div>
 
       {/* Message Content */}
-      <div className={cn('flex flex-col max-w-[70%]', isCurrentUser && 'items-end')}>
+      <div className={cn('flex flex-col max-w-[75%] min-w-0', isCurrentUser && 'items-end')}>
         {/* Username and timestamp */}
-        {!isConsecutive && (
-          <div className={cn('flex items-center gap-2 mb-1', isCurrentUser && 'flex-row-reverse')}>
-            <span className="text-sm font-medium text-white">
-              {isCurrentUser ? 'You' : message.userName}
-            </span>
+        {showAvatar && (
+          <motion.div 
+            className={cn('flex items-center gap-2 mb-1', isCurrentUser && 'flex-row-reverse')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <div className="flex items-center gap-1">
+              <span className="text-sm font-medium text-white">
+                {isCurrentUser ? 'You' : message.userName}
+              </span>
+              {isCurrentUser && (
+                <Crown className="w-3 h-3 text-yellow-400" />
+              )}
+            </div>
             <span className="text-xs text-gray-400">
               {formatMessageTime(message.timestamp)}
             </span>
-          </div>
+            {participant && (
+              <span className="text-xs text-gray-500 capitalize">
+                • {participant.mood}
+              </span>
+            )}
+          </motion.div>
         )}
 
         {/* Message bubble */}
         <motion.div
           className={cn(
-            'px-4 py-2 rounded-2xl relative group-hover:shadow-lg transition-all duration-200',
+            'px-4 py-3 rounded-2xl relative group-hover:shadow-lg transition-all duration-200 break-words',
             isCurrentUser
-              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-br-md'
-              : 'glass-card text-white rounded-bl-md',
-            isConsecutive && (isCurrentUser ? 'rounded-tr-md' : 'rounded-tl-md')
+              ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg'
+              : 'glass-card text-white border border-white/10',
+            // Rounded corners based on position
+            isCurrentUser
+              ? isConsecutive 
+                ? 'rounded-br-md' 
+                : 'rounded-br-md'
+              : isConsecutive 
+                ? 'rounded-bl-md' 
+                : 'rounded-bl-md'
           )}
           whileHover={{ scale: 1.02 }}
           transition={{ type: "spring", stiffness: 300 }}
+          style={!isCurrentUser && participant ? {
+            background: `linear-gradient(135deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.08) 100%)`,
+            borderColor: moodColor + '30'
+          } : {}}
         >
-          <p className="text-sm leading-relaxed break-words">{message.content}</p>
+          {/* Message content */}
+          <p className="text-sm leading-relaxed">{message.content}</p>
           
           {/* Reactions */}
           {message.reactions && message.reactions.length > 0 && (
@@ -115,10 +207,10 @@ const MessageBubble: React.FC<{
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   whileHover={{ scale: 1.1 }}
-                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer"
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors"
                 >
                   <span>{reaction.emoji}</span>
-                  <span className="text-white/80">{reaction.count}</span>
+                  <span className="text-white/80 font-medium">{reaction.count}</span>
                 </motion.div>
               ))}
             </div>
@@ -128,13 +220,38 @@ const MessageBubble: React.FC<{
           {message.isEdited && (
             <span className="text-xs text-white/60 italic mt-1 block">edited</span>
           )}
+
+          {/* Message tail */}
+          <div className={cn(
+            'absolute w-0 h-0 border-solid',
+            isCurrentUser
+              ? 'right-0 top-3 border-l-8 border-t-4 border-b-4 border-l-blue-500 border-t-transparent border-b-transparent'
+              : 'left-0 top-3 border-r-8 border-t-4 border-b-4 border-t-transparent border-b-transparent',
+            !isCurrentUser && participant ? '' : 'border-r-white/20'
+          )}
+          style={!isCurrentUser && participant ? {
+            borderRightColor: moodColor + '40'
+          } : {}}
+        />
         </motion.div>
+
+        {/* Timestamp for consecutive messages */}
+        {isConsecutive && (
+          <motion.div
+            className={cn('text-xs text-gray-500 mt-1', isCurrentUser ? 'text-right' : 'text-left')}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {formatMessageTime(message.timestamp)}
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
 };
 
-const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId, participants }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,11 +264,17 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
         {messages.map((message, index) => {
           const previousMessage = messages[index - 1];
           const isCurrentUser = message.userId === currentUserId;
+          const participant = participants.find(p => p.userId === message.userId);
+          
+          // Check if this message is consecutive (same user, within 5 minutes)
           const isConsecutive = 
             previousMessage &&
             previousMessage.userId === message.userId &&
             previousMessage.type === message.type &&
-            new Date(message.timestamp).getTime() - new Date(previousMessage.timestamp).getTime() < 60000; // Within 1 minute
+            differenceInMinutes(new Date(message.timestamp), new Date(previousMessage.timestamp)) < 5;
+
+          // Show avatar for first message in a group or after a time gap
+          const showAvatar = !isConsecutive;
 
           return (
             <MessageBubble
@@ -159,6 +282,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, currentUserId }) =>
               message={message}
               isCurrentUser={isCurrentUser}
               isConsecutive={isConsecutive}
+              participant={participant}
+              showAvatar={showAvatar}
             />
           );
         })}

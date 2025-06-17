@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Smile, Paperclip, Mic, Plus, Image, Gift } from 'lucide-react';
+import { Send, Smile, Paperclip, Mic, Plus, Image, Gift, Heart, Coffee, Star, Moon, Sun } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
@@ -8,19 +8,54 @@ interface MessageInputProps {
   onSendMessage: (content: string) => void;
   onTypingStart: () => void;
   onTypingStop: () => void;
+  currentUser?: {
+    userId: string;
+    userName: string;
+    mood: string;
+    avatar: string;
+  };
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onTypingStart,
   onTypingStop,
+  currentUser,
 }) => {
   const [message, setMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const getMoodColor = (mood: string) => {
+    const colors = {
+      hopeful: '#FFE66D',
+      lonely: '#8E9AAF',
+      motivated: '#FFB4A2',
+      calm: '#A3C4BC',
+      loving: '#FF8FA3',
+      joyful: '#FFD93D',
+    };
+    return colors[mood?.toLowerCase() as keyof typeof colors] || '#A3C4BC';
+  };
+
+  const getMoodIcon = (mood: string) => {
+    const icons = {
+      hopeful: Sun,
+      lonely: Moon,
+      motivated: Star,
+      calm: Coffee,
+      loving: Heart,
+      joyful: Smile,
+    };
+    return icons[mood?.toLowerCase() as keyof typeof icons] || Coffee;
+  };
+
+  const moodColor = currentUser ? getMoodColor(currentUser.mood) : '#A3C4BC';
+  const MoodIcon = currentUser ? getMoodIcon(currentUser.mood) : Coffee;
 
   // Auto-resize textarea
   useEffect(() => {
@@ -97,8 +132,36 @@ const MessageInput: React.FC<MessageInputProps> = ({
     { icon: Smile, label: 'Emoji', color: 'text-yellow-400' },
   ];
 
+  const commonEmojis = ['😊', '😂', '❤️', '👍', '🙏', '💪', '✨', '🔥', '🎉', '🤗', '😢', '🤔'];
+
   return (
     <div className="p-4">
+      {/* User Preview */}
+      {currentUser && isFocused && (
+        <motion.div
+          initial={{ opacity: 0, y: 10, height: 0 }}
+          animate={{ opacity: 1, y: 0, height: 'auto' }}
+          exit={{ opacity: 0, y: 10, height: 0 }}
+          className="mb-3 p-3 rounded-xl border border-white/10"
+          style={{ 
+            background: `linear-gradient(135deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.05) 100%)`,
+            borderColor: moodColor + '30'
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold text-white"
+              style={{ backgroundColor: moodColor + '60' }}
+            >
+              {currentUser.userName?.charAt(0) || 'U'}
+            </div>
+            <span className="text-white text-sm font-medium">{currentUser.userName}</span>
+            <MoodIcon className="w-3 h-3" style={{ color: moodColor }} />
+            <span className="text-xs text-gray-400 capitalize">{currentUser.mood}</span>
+          </div>
+        </motion.div>
+      )}
+
       {/* Quick Reactions */}
       <AnimatePresence>
         {isFocused && (
@@ -239,22 +302,55 @@ const MessageInput: React.FC<MessageInputProps> = ({
           </AnimatePresence>
         </div>
 
-        {/* Voice Message Button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="glass-card border-white/20 text-white hover:bg-white/10 p-2 rounded-full"
-        >
-          <Mic className="h-4 w-4" />
-        </Button>
+        {/* Emoji Button */}
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="glass-card border-white/20 text-white hover:bg-white/10 p-2 rounded-full"
+          >
+            <Smile className="h-4 w-4" />
+          </Button>
+
+          {/* Emoji Picker */}
+          <AnimatePresence>
+            {showEmojiPicker && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                className="absolute bottom-full right-0 mb-2 glass-card rounded-2xl p-3 border border-white/20 grid grid-cols-6 gap-2"
+              >
+                {commonEmojis.map((emoji, index) => (
+                  <motion.button
+                    key={emoji}
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.03 }}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
+                    onClick={() => {
+                      setMessage(prev => prev + emoji);
+                      setShowEmojiPicker(false);
+                    }}
+                  >
+                    {emoji}
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
         
         {/* Send Button */}
         <motion.button
           type="submit"
           disabled={!message.trim()}
           className={cn(
-            'p-2 rounded-full transition-all duration-200 relative overflow-hidden',
+            'p-3 rounded-full transition-all duration-200 relative overflow-hidden',
             message.trim()
               ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg'
               : 'glass-card border-white/20 text-gray-400 cursor-not-allowed'
@@ -277,3 +373,5 @@ const MessageInput: React.FC<MessageInputProps> = ({
 };
 
 export default MessageInput;
+
+export default MessageInput
