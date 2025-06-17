@@ -40,14 +40,39 @@ const generateUUID = (): string => {
   });
 };
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+// Validate UUID format
+const isValidUUID = (uuid: string): boolean => {
+  return typeof uuid === 'string' && UUID_REGEX.test(uuid);
+};
+
 // Clear any existing old-format userIds from localStorage
 const clearOldUserData = () => {
   const existingUserId = localStorage.getItem('echoroom_userId');
-  if (existingUserId && !existingUserId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+  if (existingUserId && !isValidUUID(existingUserId)) {
     console.log('[SocketContext] Clearing old format userId:', existingUserId);
     localStorage.removeItem('echoroom_userId');
     localStorage.removeItem('echoroom_userName');
   }
+};
+
+// Initialize user ID with proper validation
+const initializeUserId = (): string => {
+  // Clear old data first
+  clearOldUserData();
+  
+  const stored = localStorage.getItem('echoroom_userId');
+  if (stored && isValidUUID(stored)) {
+    console.log('[SocketContext] Using existing valid UUID:', stored);
+    return stored;
+  }
+  
+  const newUUID = generateUUID();
+  console.log('[SocketContext] Generated new UUID:', newUUID);
+  localStorage.setItem('echoroom_userId', newUUID);
+  return newUUID;
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -58,31 +83,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   
-  // Clear old data first
-  useEffect(() => {
-    clearOldUserData();
-  }, []);
-  
-  // Generate proper UUID for userId
-  const userIdRef = useRef<string>(() => {
-    const stored = localStorage.getItem('echoroom_userId');
-    if (stored && stored.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
-      return stored;
-    }
-    const newUUID = generateUUID();
-    console.log('[SocketContext] Generated new UUID:', newUUID);
-    return newUUID;
-  });
+  // Initialize userId with proper validation
+  const [userId] = useState<string>(() => initializeUserId());
   
   const [userName, setUserNameState] = useState<string>(
     localStorage.getItem('echoroom_userName') || generateAnonymousUserName()
   );
 
-  // Persist userId and userName in localStorage
+  // Persist userName in localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('echoroom_userId', userIdRef.current);
     localStorage.setItem('echoroom_userName', userName);
-    console.log('[SocketContext] Persisted userId:', userIdRef.current);
+    console.log('[SocketContext] Persisted userName:', userName);
   }, [userName]);
 
   const setUserName = useCallback((name: string) => {
@@ -94,23 +105,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const joinRoom = useCallback(async (roomData: JoinRoomData) => {
     if (socket && isConnected) {
       try {
-        // Ensure we're using a valid UUID
-        const currentUserId = userIdRef.current;
-        console.log('[SocketContext] Using userId for join:', currentUserId);
+        console.log('[SocketContext] Using userId for join:', userId);
         
-        // Validate UUID format
-        if (!currentUserId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
-          console.error('[SocketContext] Invalid UUID format:', currentUserId);
-          // Generate a new UUID if the current one is invalid
-          const newUUID = generateUUID();
-          userIdRef.current = newUUID;
-          localStorage.setItem('echoroom_userId', newUUID);
-          console.log('[SocketContext] Generated new UUID to replace invalid one:', newUUID);
+        // Validate UUID format (should always be valid now, but double-check)
+        if (!isValidUUID(userId)) {
+          console.error('[SocketContext] Invalid UUID format:', userId);
+          throw new Error('Invalid user ID format');
         }
 
         // First, create/update participant in database
         const participantData = {
-          user_id: userIdRef.current,
+          user_id: userId,
           session_id: roomData.roomId,
           user_name: roomData.userName,
           mood: roomData.mood,
@@ -141,7 +146,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Then emit socket event to join room
         const dataToSend = { 
           session_id: roomData.roomId,
-          user_id: userIdRef.current, 
+          user_id: userId, 
           username: roomData.userName,
           mood: roomData.mood
         };
@@ -156,13 +161,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       console.warn('[SocketContext] Cannot join room: socket not connected');
       throw new Error('Socket not connected');
     }
-  }, [isConnected]);
+  }, [isConnected, userId]);
 
   const leaveRoom = useCallback(async () => {
     if (socket && roomId && isConnected) {
       try {
         // Update participant status in database
-        const response = await fetch(`http://localhost:5000/api/participants/${userIdRef.current}/${roomId}`, {
+        const response = await fetch(`http://localhost:5000/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -180,7 +185,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Emit socket event to leave room
         const dataToSend = { 
           session_id: roomId, 
-          user_id: userIdRef.current 
+          user_id: userId 
         };
         console.log('[SocketContext] Emitting leaveRoom with data:', dataToSend);
         socket.emit('leaveRoom', dataToSend);
@@ -194,7 +199,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error('[SocketContext] Error leaving room:', error);
       }
     }
-  }, [roomId, isConnected]);
+  }, [roomId, isConnected, userId]);
 
   const sendMessage = useCallback((content: string, type: 'text' | 'system' | 'ai-prompt' | 'mood-check' = 'text') => {
     if (socket && roomId && isConnected) {
@@ -202,54 +207,54 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         session_id: roomId,
         sender: userName,
         text: content,
-        user_id: userIdRef.current,
+        user_id: userId,
         type: type
       };
       console.log('[SocketContext] Emitting sendMessage with payload:', messagePayload);
       socket.emit('sendMessage', messagePayload);
     }
-  }, [roomId, isConnected, userName]);
+  }, [roomId, isConnected, userName, userId]);
 
   const sendReaction = useCallback((messageId: string, emoji: string) => {
     if (socket && isConnected) {
       const dataToSend = { 
         messageId, 
         reaction: emoji, 
-        userId: userIdRef.current 
+        userId: userId 
       };
       console.log('[SocketContext] Emitting message-reaction with data:', dataToSend);
       socket.emit('message-reaction', dataToSend);
     }
-  }, [isConnected]);
+  }, [isConnected, userId]);
 
   const startTyping = useCallback(() => {
     if (socket && roomId && isConnected) {
       const dataToSend = { 
         session_id: roomId, 
-        user_id: userIdRef.current, 
+        user_id: userId, 
         username: userName 
       };
       console.log('[SocketContext] Emitting typing-start with data:', dataToSend);
       socket.emit('typing-start', dataToSend);
     }
-  }, [roomId, isConnected, userName]);
+  }, [roomId, isConnected, userName, userId]);
 
   const stopTyping = useCallback(() => {
     if (socket && roomId && isConnected) {
       const dataToSend = { 
         session_id: roomId, 
-        user_id: userIdRef.current 
+        user_id: userId 
       };
       console.log('[SocketContext] Emitting typing-stop with data:', dataToSend);
       socket.emit('typing-stop', dataToSend);
     }
-  }, [roomId, isConnected]);
+  }, [roomId, isConnected, userId]);
 
   const updateVoiceStatus = useCallback(async (isSpeaking: boolean, isMuted: boolean) => {
     if (socket && isConnected && roomId) {
       try {
         // Update participant voice status in database
-        const response = await fetch(`http://localhost:5000/api/participants/${userIdRef.current}/${roomId}`, {
+        const response = await fetch(`http://localhost:5000/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -266,7 +271,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         // Emit socket event
         const dataToSend = { 
-          userId: userIdRef.current, 
+          userId: userId, 
           isSpeaking, 
           isMuted 
         };
@@ -276,7 +281,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         // Update local participant state immediately for better UX
         setParticipants(prev => 
           prev.map(p => 
-            p.userId === userIdRef.current 
+            p.userId === userId 
               ? { ...p, isSpeaking, isMuted }
               : p
           )
@@ -285,7 +290,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         console.error('[SocketContext] Error updating voice status:', error);
       }
     }
-  }, [isConnected, roomId]);
+  }, [isConnected, roomId, userId]);
 
   // Event Listeners (Backend -> Frontend)
   useEffect(() => {
@@ -368,8 +373,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleUserLeft = (data: any) => {
       console.log('[SocketContext] Received user-left', data);
-      const userId = data.user_id || data.id;
-      setParticipants(prev => prev.filter(p => p.userId !== userId));
+      const userIdToRemove = data.user_id || data.id;
+      setParticipants(prev => prev.filter(p => p.userId !== userIdToRemove));
     };
 
     const handleTypingStart = (data: any) => {
@@ -390,8 +395,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleTypingStop = (data: any) => {
       console.log('[SocketContext] Received typing-stop', data);
-      const userId = data.user_id || data.userId;
-      setTypingUsers(prev => prev.filter(u => u.userId !== userId));
+      const userIdToRemove = data.user_id || data.userId;
+      setTypingUsers(prev => prev.filter(u => u.userId !== userIdToRemove));
     };
 
     const handleVoiceStatus = (data: any) => {
@@ -452,7 +457,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     participants,
     messages,
     typingUsers,
-    userId: userIdRef.current,
+    userId,
     userName,
     setUserName,
     joinRoom,
