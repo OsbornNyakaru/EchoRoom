@@ -3,8 +3,8 @@ import useSocket from '../hooks/useSocket';
 import { Socket } from 'socket.io-client';
 import { Participant, RoomInfo, JoinRoomData, SessionPhase } from '../types/room';
 import { ChatMessage, TypingUser } from '../types/chat';
-import socket from '../lib/socket'; // Import the shared socket instance
-import { generateAnonymousUserName } from '../lib/utils'; // Import the new utility
+import socket from '../lib/socket';
+import { generateAnonymousUserName } from '../lib/utils';
 
 interface SocketContextType {
   socket: typeof Socket | null;
@@ -44,161 +44,254 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   // Event Emitters (Frontend -> Backend)
   const joinRoom = useCallback((roomData: JoinRoomData) => {
-    if (socket) {
-      const dataToSend = { ...roomData, userId: userIdRef.current, userName: userNameRef.current };
+    if (socket && isConnected) {
+      const dataToSend = { 
+        session_id: roomData.roomId,
+        user_id: userIdRef.current, 
+        username: userNameRef.current,
+        mood: roomData.mood
+      };
       console.log('[SocketContext] Emitting joinRoom with data:', dataToSend);
       socket.emit('joinRoom', dataToSend);
+    } else {
+      console.warn('[SocketContext] Cannot join room: socket not connected');
     }
-  }, []);
+  }, [isConnected]);
 
   const leaveRoom = useCallback(() => {
-    if (socket && roomId) {
-      const dataToSend = { roomId, userId: userIdRef.current };
+    if (socket && roomId && isConnected) {
+      const dataToSend = { 
+        session_id: roomId, 
+        user_id: userIdRef.current 
+      };
       console.log('[SocketContext] Emitting leaveRoom with data:', dataToSend);
       socket.emit('leaveRoom', dataToSend);
+      
+      // Clear local state
       setRoomId(null);
       setParticipants([]);
       setMessages([]);
       setTypingUsers([]);
     }
-  }, [roomId]);
+  }, [roomId, isConnected]);
 
   const sendMessage = useCallback((content: string, type: 'text' | 'system' | 'ai-prompt' | 'mood-check' = 'text') => {
-    if (socket && roomId) {
+    if (socket && roomId && isConnected) {
       const messagePayload = {
         session_id: roomId,
         sender: userNameRef.current,
         text: content,
-        userId: userIdRef.current,
+        user_id: userIdRef.current,
+        type: type
       };
       console.log('[SocketContext] Emitting sendMessage with payload:', messagePayload);
       socket.emit('sendMessage', messagePayload);
     }
-  }, [roomId]);
+  }, [roomId, isConnected]);
 
   const sendReaction = useCallback((messageId: string, emoji: string) => {
-    if (socket) {
-      const dataToSend = { messageId, reaction: emoji, userId: userIdRef.current };
+    if (socket && isConnected) {
+      const dataToSend = { 
+        messageId, 
+        reaction: emoji, 
+        userId: userIdRef.current 
+      };
       console.log('[SocketContext] Emitting message-reaction with data:', dataToSend);
       socket.emit('message-reaction', dataToSend);
     }
-  }, []);
+  }, [isConnected]);
 
   const startTyping = useCallback(() => {
-    if (socket && roomId) {
-      const dataToSend = { roomId, userId: userIdRef.current, userName: userNameRef.current };
+    if (socket && roomId && isConnected) {
+      const dataToSend = { 
+        session_id: roomId, 
+        user_id: userIdRef.current, 
+        username: userNameRef.current 
+      };
       console.log('[SocketContext] Emitting typing-start with data:', dataToSend);
       socket.emit('typing-start', dataToSend);
     }
-  }, [roomId]);
+  }, [roomId, isConnected]);
 
   const stopTyping = useCallback(() => {
-    if (socket && roomId) {
-      const dataToSend = { roomId, userId: userIdRef.current };
+    if (socket && roomId && isConnected) {
+      const dataToSend = { 
+        session_id: roomId, 
+        user_id: userIdRef.current 
+      };
       console.log('[SocketContext] Emitting typing-stop with data:', dataToSend);
       socket.emit('typing-stop', dataToSend);
     }
-  }, [roomId]);
+  }, [roomId, isConnected]);
 
   const updateVoiceStatus = useCallback((isSpeaking: boolean, isMuted: boolean) => {
-    if (socket) {
-      const dataToSend = { userId: userIdRef.current, isSpeaking, isMuted };
+    if (socket && isConnected) {
+      const dataToSend = { 
+        userId: userIdRef.current, 
+        isSpeaking, 
+        isMuted 
+      };
       console.log('[SocketContext] Emitting voice-status with data:', dataToSend);
       socket.emit('voice-status', dataToSend);
+      
+      // Update local participant state immediately for better UX
+      setParticipants(prev => 
+        prev.map(p => 
+          p.userId === userIdRef.current 
+            ? { ...p, isSpeaking, isMuted }
+            : p
+        )
+      );
     }
-  }, []);
+  }, [isConnected]);
 
   // Event Listeners (Backend -> Frontend)
   useEffect(() => {
     if (!socket) return;
 
-    const handleRoomJoined = (data: { participants: Participant[], roomInfo: RoomInfo }) => {
+    const handleRoomJoined = (data: any) => {
       console.log('[SocketContext] Received room-joined', data);
-      setRoomId(data.roomInfo.roomId);
-      // Ensure the current user is added to participants if not already there
-      const currentParticipant: Participant = {
-        userId: userIdRef.current,
-        userName: userNameRef.current,
-        avatar: '/avatars/default-avatar.png',
-        mood: data.roomInfo.mood,
+      
+      if (data.session_id) {
+        setRoomId(data.session_id);
+      }
+      
+      // Handle participants data
+      if (data.participants) {
+        setParticipants(data.participants);
+      } else if (data.users) {
+        // Convert users array to participants format
+        const convertedParticipants = data.users.map((user: any) => ({
+          userId: user.user_id || user.id,
+          userName: user.username || user.name,
+          avatar: user.avatar || '/avatars/default-avatar.png',
+          mood: user.mood || 'calm',
+          isSpeaking: false,
+          isMuted: false,
+        }));
+        setParticipants(convertedParticipants);
+      }
+    };
+
+    const handleReceiveMessage = (data: any) => {
+      console.log('[SocketContext] Received receiveMessage', data);
+      
+      const message: ChatMessage = {
+        id: data.id || `msg-${Date.now()}-${Math.random()}`,
+        userId: data.user_id || data.sender_id,
+        userName: data.sender || data.username,
+        avatar: data.avatar || '/avatars/default-avatar.png',
+        content: data.text || data.message || data.content,
+        type: data.type || 'text',
+        timestamp: new Date(data.timestamp || data.created_at || Date.now()),
+        reactions: data.reactions || [],
+        isEdited: data.is_edited || false,
+        replyTo: data.reply_to
+      };
+      
+      setMessages(prev => {
+        // Prevent duplicate messages
+        const exists = prev.some(m => m.id === message.id);
+        if (exists) return prev;
+        return [...prev, message];
+      });
+    };
+
+    const handleUserJoined = (data: any) => {
+      console.log('[SocketContext] Received user-joined', data);
+      
+      const newParticipant: Participant = {
+        userId: data.user_id || data.id,
+        userName: data.username || data.name,
+        avatar: data.avatar || '/avatars/default-avatar.png',
+        mood: data.mood || 'calm',
         isSpeaking: false,
         isMuted: false,
       };
-      setParticipants((prev) => {
-        const existing = prev.find(p => p.userId === userIdRef.current);
-        return existing ? prev : [...prev, currentParticipant];
+      
+      setParticipants(prev => {
+        const exists = prev.some(p => p.userId === newParticipant.userId);
+        if (exists) return prev;
+        return [...prev, newParticipant];
       });
     };
 
-    const handleReceiveMessage = (message: ChatMessage) => {
-      console.log('[SocketContext] Received receiveMessage', message);
-      setMessages((prev) => {
-        const newMessages = [...prev, message];
-        // Ensure unique messages if there's a chance of duplicates
-        const uniqueMessages = Array.from(new Map(newMessages.map(item => [item['id'], item])).values());
-        return uniqueMessages;
-      });
+    const handleUserLeft = (data: any) => {
+      console.log('[SocketContext] Received user-left', data);
+      const userId = data.user_id || data.id;
+      setParticipants(prev => prev.filter(p => p.userId !== userId));
     };
 
-    const handleTypingStart = (data: { userId: string, userName: string }) => {
+    const handleTypingStart = (data: any) => {
       console.log('[SocketContext] Received typing-start', data);
-      setTypingUsers((prev) => {
-        if (!prev.find((u) => u.userId === data.userId)) {
-          return [...prev, { ...data, avatar: '/avatars/default-avatar.png', timestamp: new Date() }];
-        }
-        return prev;
+      const typingUser: TypingUser = {
+        userId: data.user_id || data.userId,
+        userName: data.username || data.userName,
+        avatar: data.avatar || '/avatars/default-avatar.png',
+        timestamp: new Date()
+      };
+      
+      setTypingUsers(prev => {
+        const exists = prev.some(u => u.userId === typingUser.userId);
+        if (exists) return prev;
+        return [...prev, typingUser];
       });
     };
 
-    const handleTypingStop = (data: { userId: string }) => {
+    const handleTypingStop = (data: any) => {
       console.log('[SocketContext] Received typing-stop', data);
-      setTypingUsers((prev) => prev.filter((u) => u.userId !== data.userId));
+      const userId = data.user_id || data.userId;
+      setTypingUsers(prev => prev.filter(u => u.userId !== userId));
     };
 
-    const handleMessageReaction = (data: { messageId: string, reaction: string, userId: string }) => {
-      console.log('[SocketContext] Received message-reaction', data);
-      setMessages((prevMessages) =>
-        prevMessages.map((msg) =>
-          msg.id === data.messageId
-            ? {
-                ...msg,
-                reactions: msg.reactions.map((r) =>
-                  r.emoji === data.reaction
-                    ? { ...r, users: [...r.users, data.userId], count: r.count + 1 }
-                    : r
-                ), 
-              }
-            : msg
+    const handleVoiceStatus = (data: any) => {
+      console.log('[SocketContext] Received voice-status', data);
+      const { user_id, isSpeaking, isMuted } = data;
+      
+      setParticipants(prev =>
+        prev.map(p =>
+          p.userId === user_id
+            ? { ...p, isSpeaking: isSpeaking || false, isMuted: isMuted || false }
+            : p
         )
       );
     };
 
-    const handleSessionUpdate = (data: { timeRemaining: number, phase: SessionPhase }) => {
-      console.log('[SocketContext] Received session-update', data);
+    const handleError = (error: any) => {
+      console.error('[SocketContext] Socket error:', error);
     };
 
-    const handleSessionEnd = () => {
-      console.log('[SocketContext] Received session-end');
+    const handleDisconnect = (reason: string) => {
+      console.log('[SocketContext] Socket disconnected:', reason);
+      // Clear state on disconnect
+      setRoomId(null);
+      setParticipants([]);
+      setMessages([]);
+      setTypingUsers([]);
     };
 
-    // Register listeners
+    // Register all event listeners
     socket.on('room-joined', handleRoomJoined);
     socket.on('receiveMessage', handleReceiveMessage);
+    socket.on('user-joined', handleUserJoined);
+    socket.on('user-left', handleUserLeft);
     socket.on('typing-start', handleTypingStart);
     socket.on('typing-stop', handleTypingStop);
-    socket.on('message-reaction', handleMessageReaction);
-    socket.on('session-update', handleSessionUpdate);
-    socket.on('session-end', handleSessionEnd);
+    socket.on('voice-status', handleVoiceStatus);
+    socket.on('error', handleError);
+    socket.on('disconnect', handleDisconnect);
 
+    // Cleanup listeners
     return () => {
-      // Clean up listeners on unmount
       socket.off('room-joined', handleRoomJoined);
       socket.off('receiveMessage', handleReceiveMessage);
+      socket.off('user-joined', handleUserJoined);
+      socket.off('user-left', handleUserLeft);
       socket.off('typing-start', handleTypingStart);
       socket.off('typing-stop', handleTypingStop);
-      socket.off('message-reaction', handleMessageReaction);
-      socket.off('session-update', handleSessionUpdate);
-      socket.off('session-end', handleSessionEnd);
+      socket.off('voice-status', handleVoiceStatus);
+      socket.off('error', handleError);
+      socket.off('disconnect', handleDisconnect);
     };
   }, [socket]);
 
@@ -229,4 +322,4 @@ export const useSocketContext = () => {
     throw new Error('useSocketContext must be used within a SocketProvider');
   }
   return context;
-}; 
+};

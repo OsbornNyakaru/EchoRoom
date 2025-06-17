@@ -5,17 +5,27 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles } from "lucide-react"
+import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2 } from "lucide-react"
 import FloatingParticles from "../components/floating-particles"
+import { useSocketContext } from "../context/SocketContext"
+
+interface ChatSession {
+  id: string;
+  category: string;
+  created_at: string;
+  description: string | null;
+}
 
 export default function Welcome() {
   const navigate = useNavigate()
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
   const mood = searchParams.get("mood") || "calm"
+  const { joinRoom, userId, userName, isConnected } = useSocketContext()
 
   const welcomeVideoRef = useRef<HTMLVideoElement>(null);
   const [isVideoFinished, setIsVideoFinished] = useState(false);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   const validMoods = ["hopeful", "lonely", "motivated", "calm", "loving", "joyful"]
   const validatedMood = validMoods.includes(mood) ? mood : "calm"
@@ -27,10 +37,57 @@ export default function Welcome() {
   const REDIRECT_DELAY_MS = 5000; // 5 seconds delay for auto-redirection
   const [hasUserManuallyJoined, setHasUserManuallyJoined] = useState(false);
 
-  const handleJoinRoom = useCallback(() => {
+  const handleJoinRoom = useCallback(async () => {
+    if (!isConnected || !userId || !userName) {
+      console.warn('[Welcome.tsx] Cannot join room: Socket not connected or user info missing');
+      return;
+    }
+
     setHasUserManuallyJoined(true);
-    navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
-  }, [navigate, validatedMood]);
+    setIsJoiningRoom(true);
+
+    try {
+      console.log('[Welcome.tsx] Fetching sessions to find matching room...');
+      const response = await fetch('http://localhost:5000/api/sessions');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const sessions: ChatSession[] = await response.json();
+      console.log('[Welcome.tsx] Available sessions:', sessions);
+
+      // Find a session that matches the user's mood
+      const matchingSession = sessions.find(session => 
+        session.category.toLowerCase() === validatedMood.toLowerCase()
+      );
+
+      if (matchingSession) {
+        console.log(`[Welcome.tsx] Found matching session for mood "${validatedMood}":`, matchingSession);
+        
+        // Join the room using the socket context
+        joinRoom({
+          roomId: matchingSession.id,
+          userId: userId,
+          userName: userName,
+          mood: validatedMood
+        });
+
+        // Navigate to the room page
+        navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+      } else {
+        console.warn(`[Welcome.tsx] No session found for mood "${validatedMood}"`);
+        // Fallback: navigate to room page anyway, let user select manually
+        navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+      }
+    } catch (error) {
+      console.error('[Welcome.tsx] Error fetching sessions or joining room:', error);
+      // Fallback: navigate to room page anyway
+      navigate(`/room?mood=${encodeURIComponent(validatedMood)}`);
+    } finally {
+      setIsJoiningRoom(false);
+    }
+  }, [navigate, validatedMood, joinRoom, userId, userName, isConnected]);
 
   const moodColors = {
     hopeful: "#FFE66D",
@@ -88,14 +145,14 @@ export default function Welcome() {
   }, [validatedMood]);
 
   useEffect(() => {
-    if (isReady && isVideoFinished && !hasUserManuallyJoined) {
+    if (isReady && isVideoFinished && !hasUserManuallyJoined && !isJoiningRoom) {
       const timeoutId = setTimeout(() => {
         handleJoinRoom();
       }, REDIRECT_DELAY_MS);
 
       return () => clearTimeout(timeoutId);
     }
-  }, [isReady, isVideoFinished, hasUserManuallyJoined, handleJoinRoom, REDIRECT_DELAY_MS]);
+  }, [isReady, isVideoFinished, hasUserManuallyJoined, isJoiningRoom, handleJoinRoom, REDIRECT_DELAY_MS]);
 
   const currentColor = moodColors[validatedMood as keyof typeof moodColors] || "#A3C4BC"
 
@@ -160,7 +217,9 @@ export default function Welcome() {
                 </span>{" "}
                 Space
               </h1>
-              <p className="text-lg text-[#D8E2DC]">Preparing your personalized experience...</p>
+              <p className="text-lg text-[#D8E2DC]">
+                {isJoiningRoom ? "Finding your perfect room..." : "Preparing your personalized experience..."}
+              </p>
             </motion.div>
 
             {/* Tavus Avatar Section */}
@@ -222,6 +281,7 @@ export default function Welcome() {
                     size="sm"
                     className="glass-card rounded-full w-10 h-10 p-0"
                     onClick={() => setIsAudioEnabled(!isAudioEnabled)}
+                    disabled={isJoiningRoom}
                   >
                     {isAudioEnabled ? (
                       <Volume2 className="h-4 w-4 text-[#A3C4BC]" />
@@ -234,6 +294,7 @@ export default function Welcome() {
                     size="sm"
                     className="glass-card rounded-full w-10 h-10 p-0"
                     onClick={() => setIsMicEnabled(!isMicEnabled)}
+                    disabled={isJoiningRoom}
                   >
                     {isMicEnabled ? (
                       <Mic className="h-4 w-4 text-[#A3C4BC]" />
@@ -260,9 +321,19 @@ export default function Welcome() {
                       size="lg"
                       className="px-10 py-5 rounded-full text-base font-semibold shadow-xl transition-all duration-300"
                       onClick={handleJoinRoom}
-                      disabled={!isReady}
+                      disabled={!isReady || isJoiningRoom || !isConnected}
                     >
-                      Enter Your Room <ArrowRight className="ml-2 h-4 w-4" />
+                      {isJoiningRoom ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Joining Room...
+                        </>
+                      ) : (
+                        <>
+                          Enter Your {validatedMood.charAt(0).toUpperCase() + validatedMood.slice(1)} Room
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
                     </Button>
                   </motion.div>
                 ) : (
@@ -278,10 +349,21 @@ export default function Welcome() {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {/* Connection Status */}
+              {!isConnected && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-center mt-2"
+                >
+                  <p className="text-sm text-yellow-400">Connecting to server...</p>
+                </motion.div>
+              )}
             </motion.div>
           </Card>
         </motion.div>
       </div>
     </div>
   )
-} 
+}

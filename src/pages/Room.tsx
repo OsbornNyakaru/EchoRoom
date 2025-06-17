@@ -1,186 +1,440 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '../context/SocketContext';
 import ChatWindow from '../components/chat/ChatWindow';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Users } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { MessageSquare, Users, Mic, MicOff, Volume2, VolumeX, Settings, LogOut, Clock, Sparkles } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 interface ChatSession {
   id: string;
-  name: string;
   category: string;
+  created_at: string;
+  description: string | null;
 }
 
-// Placeholder for ParticipantGrid - assuming you have or will create this.
-// If not, you might want to create a basic one in src/components/layout/ or src/components/voice/
-const ParticipantGrid: React.FC<{ participants: any[] }> = ({ participants }) => (
-  <div className="flex flex-col h-full p-4 bg-gray-800 rounded-lg">
-    <h2 className="text-2xl font-semibold mb-4 text-white">Participants</h2>
+interface VoiceIndicatorProps {
+  isSpeaking: boolean;
+  isMuted: boolean;
+  size?: 'sm' | 'md' | 'lg';
+}
+
+const VoiceIndicator: React.FC<VoiceIndicatorProps> = ({ isSpeaking, isMuted, size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'w-2 h-2',
+    md: 'w-3 h-3',
+    lg: 'w-4 h-4'
+  };
+
+  return (
+    <div className="flex items-center gap-1">
+      {[...Array(4)].map((_, i) => (
+        <motion.div
+          key={i}
+          className={cn(
+            'bg-current rounded-full',
+            sizeClasses[size],
+            isMuted ? 'opacity-30' : 'opacity-70'
+          )}
+          animate={
+            isSpeaking && !isMuted
+              ? {
+                  scaleY: [0.5, 1.5, 0.5],
+                  opacity: [0.5, 1, 0.5],
+                }
+              : { scaleY: 0.5, opacity: 0.3 }
+          }
+          transition={{
+            duration: 0.6,
+            repeat: isSpeaking && !isMuted ? Infinity : 0,
+            delay: i * 0.1,
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+const ParticipantCard: React.FC<{ participant: any; isCurrentUser: boolean }> = ({ 
+  participant, 
+  isCurrentUser 
+}) => {
+  const moodColors = {
+    hopeful: '#FFE66D',
+    lonely: '#8E9AAF',
+    motivated: '#FFB4A2',
+    calm: '#A3C4BC',
+    loving: '#FF8FA3',
+    joyful: '#FFD93D',
+  };
+
+  const moodColor = moodColors[participant.mood?.toLowerCase() as keyof typeof moodColors] || '#A3C4BC';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      className="glass-card p-4 rounded-2xl relative overflow-hidden"
+      style={{
+        background: `linear-gradient(135deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.05) 100%)`,
+        border: `1px solid ${moodColor}30`,
+      }}
+    >
+      {isCurrentUser && (
+        <div className="absolute top-2 right-2">
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+            You
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-col items-center space-y-3">
+        <div className="relative">
+          <Avatar className="w-16 h-16 border-2 border-white/20">
+            <AvatarImage src={participant.avatar} alt={participant.userName} />
+            <AvatarFallback style={{ backgroundColor: moodColor + '40' }}>
+              {participant.userName?.charAt(0) || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          
+          {/* Voice status indicator */}
+          <div className="absolute -bottom-1 -right-1">
+            <div 
+              className={cn(
+                'w-6 h-6 rounded-full flex items-center justify-center text-xs',
+                participant.isMuted ? 'bg-red-500' : 'bg-green-500'
+              )}
+            >
+              {participant.isMuted ? (
+                <MicOff className="w-3 h-3 text-white" />
+              ) : (
+                <Mic className="w-3 h-3 text-white" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="text-center">
+          <h3 className="text-white font-semibold text-sm truncate max-w-[120px]">
+            {participant.userName || `User ${participant.userId?.substring(0, 5)}`}
+          </h3>
+          <p className="text-xs text-gray-300 capitalize">
+            {participant.mood || 'calm'}
+          </p>
+        </div>
+
+        {/* Voice activity indicator */}
+        <div className="flex items-center justify-center h-6" style={{ color: moodColor }}>
+          <VoiceIndicator 
+            isSpeaking={participant.isSpeaking} 
+            isMuted={participant.isMuted} 
+            size="sm"
+          />
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+const ParticipantGrid: React.FC<{ participants: any[]; currentUserId: string }> = ({ 
+  participants, 
+  currentUserId 
+}) => (
+  <div className="flex flex-col h-full">
+    <div className="flex items-center justify-between mb-4">
+      <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
+        <Users className="h-6 w-6" />
+        Participants ({participants.length})
+      </h2>
+    </div>
+    
     <div className="flex-grow overflow-y-auto custom-scrollbar">
       {participants.length === 0 ? (
-        <p className="text-gray-400">No participants yet.</p>
+        <div className="flex flex-col items-center justify-center h-full text-center">
+          <div className="glass-card p-8 rounded-2xl">
+            <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg">Waiting for others to join...</p>
+            <p className="text-gray-500 text-sm mt-2">Your conversation will begin shortly</p>
+          </div>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4"> {/* Example grid for participants */}
-          {participants.map((p) => (
-            <div key={p.userId} className="bg-gray-700 p-3 rounded-lg text-white">
-              {p.userName || `User ${p.userId.substring(0, 5)}`}
-              {/* Add voice indicators here later */}
-            </div>
-          ))}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+          <AnimatePresence>
+            {participants.map((participant) => (
+              <ParticipantCard
+                key={participant.userId}
+                participant={participant}
+                isCurrentUser={participant.userId === currentUserId}
+              />
+            ))}
+          </AnimatePresence>
         </div>
       )}
     </div>
   </div>
 );
 
+const SessionSelector: React.FC<{
+  sessions: ChatSession[];
+  activeSessionId: string | null;
+  onJoinSession: (sessionId: string, sessionCategory: string) => void;
+  isConnected: boolean;
+}> = ({ sessions, activeSessionId, onJoinSession, isConnected }) => {
+  const moodColors = {
+    hopeful: '#FFE66D',
+    lonely: '#8E9AAF',
+    motivated: '#FFB4A2',
+    calm: '#A3C4BC',
+    loving: '#FF8FA3',
+    joyful: '#FFD93D',
+  };
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-3xl font-bold text-center text-white mb-6 flex items-center justify-center gap-2">
+        <Sparkles className="h-8 w-8 text-yellow-400" />
+        Switch Rooms
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {sessions.map((session) => {
+          const isActive = session.id === activeSessionId;
+          const moodColor = moodColors[session.category.toLowerCase() as keyof typeof moodColors] || '#A3C4BC';
+          
+          return (
+            <motion.button
+              key={session.id}
+              onClick={() => onJoinSession(session.id, session.category)}
+              disabled={!isConnected}
+              className={cn(
+                'glass-card p-4 rounded-2xl text-center transition-all duration-300 relative overflow-hidden',
+                isActive ? 'ring-2 ring-white/50 scale-105' : 'hover:scale-105',
+                !isConnected && 'opacity-50 cursor-not-allowed'
+              )}
+              style={{
+                background: isActive 
+                  ? `linear-gradient(135deg, ${moodColor}40 0%, ${moodColor}20 100%)`
+                  : `linear-gradient(135deg, ${moodColor}20 0%, rgba(255, 255, 255, 0.05) 100%)`,
+                border: `1px solid ${moodColor}${isActive ? '60' : '30'}`,
+              }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="text-2xl mb-2">
+                {session.category === 'Hopeful' && '🌅'}
+                {session.category === 'Lonely' && '🌙'}
+                {session.category === 'Motivated' && '⚡'}
+                {session.category === 'Calm' && '🧘'}
+                {session.category === 'Loving' && '💝'}
+                {session.category === 'Joyful' && '✨'}
+                {!['Hopeful', 'Lonely', 'Motivated', 'Calm', 'Loving', 'Joyful'].includes(session.category) && '📚'}
+              </div>
+              <h3 className="text-white font-semibold text-sm mb-1">
+                {session.category}
+              </h3>
+              {session.description && (
+                <p className="text-xs text-gray-300 leading-tight">
+                  {session.description}
+                </p>
+              )}
+              {isActive && (
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                </div>
+              )}
+            </motion.button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const Room: React.FC = () => {
-  const { socket, isConnected, roomId, participants, joinRoom, userId, userName } = useSocketContext();
+  const { socket, isConnected, roomId, participants, joinRoom, leaveRoom, userId, userName } = useSocketContext();
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const mood = searchParams.get("mood") || "calm";
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'chat' | 'participants'>('chat');
+  const [currentView, setCurrentView] = useState<'chat' | 'participants'>('participants');
+  const [isLoading, setIsLoading] = useState(true);
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
 
-  // Effect to fetch sessions and attempt to join a room
+  // Update connection status based on socket state
   useEffect(() => {
-    if (!socket || !userId || !userName || !isConnected) {
-      console.log('[Room.tsx] Skipping session fetch/join: Socket not connected or user info missing.', { isConnected, userId, userName, socket: !!socket });
-      return; // Ensure socket is connected and user info is available
+    if (isConnected) {
+      setConnectionStatus('connected');
+    } else {
+      setConnectionStatus('disconnected');
     }
+  }, [isConnected]);
 
+  // Fetch sessions for room switching
+  useEffect(() => {
     const fetchSessions = async () => {
       try {
-        console.log('[Room.tsx] Fetching sessions...');
+        setIsLoading(true);
+        console.log('[Room.tsx] Fetching sessions for room switching...');
         const response = await fetch('http://localhost:5000/api/sessions');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: ChatSession[] = await response.json();
         setSessions(data);
-
-        let sessionToJoinId: string | null = null;
-        let sessionToJoinCategory: string | null = null;
-
-        if (mood && data.length > 0) {
-          const sessionForMood = data.find(s => s.category.toLowerCase() === mood.toLowerCase());
-          if (sessionForMood) {
-            sessionToJoinId = sessionForMood.id;
-            sessionToJoinCategory = sessionForMood.category;
-            console.log(`[Room.tsx] Found session for mood "${mood}": ${sessionToJoinId}`);
-          } else if (data[0]?.id) {
-            sessionToJoinId = data[0].id;
-            sessionToJoinCategory = data[0].category;
-            console.log(`[Room.tsx] No session found for mood "${mood}". Falling back to first available session: ${sessionToJoinId}`);
-          }
-        } else if (data.length > 0) {
-          sessionToJoinId = data[0].id;
-          sessionToJoinCategory = data[0].category;
-          console.log(`[Room.tsx] No mood specified. Joining first available session: ${sessionToJoinId}`);
-        } else {
-          console.log("[Room.tsx] No sessions available from backend.");
-        }
-
-        if (sessionToJoinId && sessionToJoinId !== activeSessionId) {
-          console.log(`[Room.tsx] Attempting to join room via useEffect: ${sessionToJoinId}`);
-          setActiveSessionId(sessionToJoinId);
-          joinRoom({ roomId: sessionToJoinId, userId: userId, userName: userName, mood: sessionToJoinCategory || "default" });
-        } else if (activeSessionId) {
-          console.log(`[Room.tsx] Already in session: ${activeSessionId}. Not rejoining.`);
-        } else if (!sessionToJoinId && data.length > 0) {
-          console.log("[Room.tsx] No specific mood session found and no fallback ID provided initially. Waiting for user interaction.");
-        }
-
       } catch (error) {
         console.error('[Room.tsx] Error fetching sessions:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchSessions();
-  }, [mood, activeSessionId, joinRoom, userId, userName, socket, isConnected]); // Added socket and isConnected to dependencies
+  }, []);
 
-  // Handle joining a session when a button is clicked
+  // Handle joining a different session
   const handleJoinSession = useCallback((sessionId: string, sessionCategory: string) => {
     if (!socket || !userId || !userName || !isConnected) {
-      console.warn('[Room.tsx] Cannot manually join: Socket not connected or user info missing.', { isConnected, userId, userName, socket: !!socket });
+      console.warn('[Room.tsx] Cannot join: Socket not connected or user info missing.');
       return;
     }
-    if (activeSessionId !== sessionId) {
-      console.log(`[Room.tsx] Manually joining session: ${sessionId} (Category: ${sessionCategory})`);
-      setActiveSessionId(sessionId);
+    
+    if (roomId !== sessionId) {
+      console.log(`[Room.tsx] Switching to session: ${sessionId} (Category: ${sessionCategory})`);
       joinRoom({ roomId: sessionId, userId: userId, userName: userName, mood: sessionCategory });
-    } else {
-      console.log(`[Room.tsx] Already in session: ${sessionId}. Not rejoining.`);
     }
-  }, [activeSessionId, joinRoom, userId, userName, socket, isConnected]);
+  }, [roomId, joinRoom, userId, userName, socket, isConnected]);
+
+  // Handle leaving room
+  const handleLeaveRoom = useCallback(() => {
+    leaveRoom();
+    navigate('/');
+  }, [leaveRoom, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen aurora-bg flex items-center justify-center">
+        <div className="glass-card p-8 rounded-2xl text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-white text-lg">Loading rooms...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex flex-col p-4 md:p-8">
-      {/* Header */}
-      <header className="mb-6 text-center">
-        <h1 className="text-4xl md:text-5xl font-bold mb-2">
-          Your <span className="capitalize text-blue-400">{mood}</span> Room
-        </h1>
-        <p className="text-lg text-gray-400">
-          {isConnected ? 'Connected to chat server' : 'Connecting to chat server...'}
-        </p>
-      </header>
+    <div className="min-h-screen aurora-bg grid-pattern">
+      <div className="flex flex-col h-screen p-4 md:p-6">
+        {/* Header */}
+        <header className="mb-6">
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                Your <span className="capitalize text-gradient">{mood}</span> Space
+              </h1>
+              <div className="flex items-center justify-center gap-2 text-sm">
+                <div className={cn(
+                  'w-2 h-2 rounded-full',
+                  connectionStatus === 'connected' ? 'bg-green-400 animate-pulse' : 
+                  connectionStatus === 'connecting' ? 'bg-yellow-400 animate-pulse' : 'bg-red-400'
+                )} />
+                <span className="text-gray-300">
+                  {connectionStatus === 'connected' ? 'Connected' : 
+                   connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
+                </span>
+                {roomId && (
+                  <>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-green-400">In Room</span>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            <Button
+              onClick={handleLeaveRoom}
+              variant="outline"
+              className="glass-card border-red-400/30 text-red-400 hover:bg-red-400/10"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Leave
+            </Button>
+          </div>
+        </header>
 
-      {/* Available Rooms Section */}
-      <h2 className="text-3xl font-bold text-center text-white mb-6">Available Rooms</h2>
-      <div className="flex flex-wrap justify-center gap-4 mb-8">
-        {sessions.map((session) => (
-          <button
-            key={session.id}
-            onClick={() => handleJoinSession(session.id, session.category)}
-            className={`px-6 py-3 rounded-xl shadow-md text-lg font-semibold transition-all duration-200
-              ${session.id === activeSessionId ? 'bg-blue-600 text-white' : 'bg-white text-gray-800 hover:bg-gray-200'}
-              ${!isConnected ? 'opacity-50 cursor-not-allowed' : ''}
-            `}
-            disabled={!isConnected}
+        {/* Session Selector - Only show if user wants to switch rooms */}
+        {roomId && (
+          <SessionSelector
+            sessions={sessions}
+            activeSessionId={roomId}
+            onJoinSession={handleJoinSession}
+            isConnected={isConnected}
+          />
+        )}
+
+        {/* View Toggles for Mobile */}
+        <div className="md:hidden flex justify-center gap-2 mb-4">
+          <Button
+            onClick={() => setCurrentView('participants')}
+            variant={currentView === 'participants' ? 'default' : 'outline'}
+            className="flex items-center gap-2 glass-card"
           >
-            {session.category}
-          </button>
-        ))}
-      </div>
-
-      {/* View Toggles for Mobile */}
-      <div className="md:hidden flex justify-center gap-4 mb-4">
-        <Button
-          onClick={() => setCurrentView('participants')}
-          variant={currentView === 'participants' ? 'default' : 'outline'}
-          className="flex items-center gap-2"
-        >
-          <Users className="h-5 w-5" /> Participants
-        </Button>
-        <Button
-          onClick={() => setCurrentView('chat')}
-          variant={currentView === 'chat' ? 'default' : 'outline'}
-          className="flex items-center gap-2"
-        >
-          <MessageSquare className="h-5 w-5" /> Chat
-        </Button>
-      </div>
-
-      {/* Main Room Layout */}
-      <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-7xl mx-auto">
-        {/* Left Side: Participant Grid (shown always on md+ or when currentView is participants) */}
-        <div className={`md:col-span-1 ${currentView === 'chat' ? 'hidden md:block' : ''}`}>
-          <ParticipantGrid participants={participants} />
+            <Users className="h-4 w-4" /> 
+            Participants ({participants.length})
+          </Button>
+          <Button
+            onClick={() => setCurrentView('chat')}
+            variant={currentView === 'chat' ? 'default' : 'outline'}
+            className="flex items-center gap-2 glass-card"
+          >
+            <MessageSquare className="h-4 w-4" /> 
+            Chat
+          </Button>
         </div>
 
-        {/* Right Side: Real-time Chat Window (shown always on md+ or when currentView is chat) */}
-        <div className={`md:col-span-1 h-[calc(80vh)] md:h-full ${currentView === 'participants' ? 'hidden md:block' : ''}`}> {/* Adjust height as needed */}
-          <ChatWindow />
-        </div>
-      </div>
+        {/* Main Room Layout */}
+        {roomId ? (
+          <div className="flex-grow grid grid-cols-1 md:grid-cols-5 gap-6 min-h-0">
+            {/* Left Side: Participant Grid */}
+            <div className={cn(
+              'md:col-span-2',
+              currentView === 'chat' ? 'hidden md:block' : ''
+            )}>
+              <ParticipantGrid participants={participants} currentUserId={userId} />
+            </div>
 
-      {/* Footer (Voice controls + chat input - if separate from ChatWindow) */}
-      {/* Your voice controls can be placed here or within ParticipantGrid/ChatWindow */}
-      {/* Example: <div className="mt-6 text-center">Voice Controls Go Here</div> */}
+            {/* Right Side: Chat Window */}
+            <div className={cn(
+              'md:col-span-3 min-h-0',
+              currentView === 'participants' ? 'hidden md:block' : ''
+            )}>
+              <ChatWindow />
+            </div>
+          </div>
+        ) : (
+          <div className="flex-grow flex items-center justify-center">
+            <Card className="glass-card p-8 rounded-2xl text-center max-w-md">
+              <Sparkles className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-white mb-2">No Room Joined</h3>
+              <p className="text-gray-300 mb-4">
+                It looks like you haven't joined a room yet. You can go back to the welcome page to join your {mood} room.
+              </p>
+              <Button
+                onClick={() => navigate(`/welcome?mood=${encodeURIComponent(mood)}`)}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              >
+                Go to Welcome Page
+              </Button>
+            </Card>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-export default Room; 
+export default Room;

@@ -19,4 +19,4 @@ socket.on('disconnect', () => {
 
 socket.on('connect_error', (err: Error) => {
   console.error('Socket connection error:', err.message);
-}); 
+});
