@@ -197,7 +197,7 @@ const SessionSelector: React.FC<{
     <div className="mb-8">
       <h2 className="text-3xl font-bold text-center text-white mb-6 flex items-center justify-center gap-2">
         <Sparkles className="h-8 w-8 text-yellow-400" />
-        Choose Your Room
+        Switch Rooms
       </h2>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         {sessions.map((session) => {
@@ -261,7 +261,6 @@ const Room: React.FC = () => {
   const mood = searchParams.get("mood") || "calm";
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'chat' | 'participants'>('participants');
   const [isLoading, setIsLoading] = useState(true);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
@@ -275,27 +274,18 @@ const Room: React.FC = () => {
     }
   }, [isConnected]);
 
-  // Fetch sessions and attempt to join a room
+  // Fetch sessions for room switching
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         setIsLoading(true);
-        console.log('[Room.tsx] Fetching sessions...');
+        console.log('[Room.tsx] Fetching sessions for room switching...');
         const response = await fetch('http://localhost:5000/api/sessions');
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data: ChatSession[] = await response.json();
         setSessions(data);
-
-        // Auto-join based on mood if available
-        if (mood && data.length > 0 && !activeSessionId) {
-          const sessionForMood = data.find(s => s.category.toLowerCase() === mood.toLowerCase());
-          if (sessionForMood) {
-            console.log(`[Room.tsx] Auto-joining session for mood "${mood}": ${sessionForMood.id}`);
-            handleJoinSession(sessionForMood.id, sessionForMood.category);
-          }
-        }
       } catch (error) {
         console.error('[Room.tsx] Error fetching sessions:', error);
       } finally {
@@ -304,26 +294,24 @@ const Room: React.FC = () => {
     };
 
     fetchSessions();
-  }, [mood]); // Remove activeSessionId from dependencies to prevent infinite loops
+  }, []);
 
-  // Handle joining a session
+  // Handle joining a different session
   const handleJoinSession = useCallback((sessionId: string, sessionCategory: string) => {
     if (!socket || !userId || !userName || !isConnected) {
       console.warn('[Room.tsx] Cannot join: Socket not connected or user info missing.');
       return;
     }
     
-    if (activeSessionId !== sessionId) {
-      console.log(`[Room.tsx] Joining session: ${sessionId} (Category: ${sessionCategory})`);
-      setActiveSessionId(sessionId);
+    if (roomId !== sessionId) {
+      console.log(`[Room.tsx] Switching to session: ${sessionId} (Category: ${sessionCategory})`);
       joinRoom({ roomId: sessionId, userId: userId, userName: userName, mood: sessionCategory });
     }
-  }, [activeSessionId, joinRoom, userId, userName, socket, isConnected]);
+  }, [roomId, joinRoom, userId, userName, socket, isConnected]);
 
   // Handle leaving room
   const handleLeaveRoom = useCallback(() => {
     leaveRoom();
-    setActiveSessionId(null);
     navigate('/');
   }, [leaveRoom, navigate]);
 
@@ -358,6 +346,12 @@ const Room: React.FC = () => {
                   {connectionStatus === 'connected' ? 'Connected' : 
                    connectionStatus === 'connecting' ? 'Connecting...' : 'Disconnected'}
                 </span>
+                {roomId && (
+                  <>
+                    <span className="text-gray-500">•</span>
+                    <span className="text-green-400">In Room</span>
+                  </>
+                )}
               </div>
             </div>
             
@@ -372,13 +366,15 @@ const Room: React.FC = () => {
           </div>
         </header>
 
-        {/* Session Selector */}
-        <SessionSelector
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onJoinSession={handleJoinSession}
-          isConnected={isConnected}
-        />
+        {/* Session Selector - Only show if user wants to switch rooms */}
+        {roomId && (
+          <SessionSelector
+            sessions={sessions}
+            activeSessionId={roomId}
+            onJoinSession={handleJoinSession}
+            isConnected={isConnected}
+          />
+        )}
 
         {/* View Toggles for Mobile */}
         <div className="md:hidden flex justify-center gap-2 mb-4">
@@ -401,7 +397,7 @@ const Room: React.FC = () => {
         </div>
 
         {/* Main Room Layout */}
-        {activeSessionId ? (
+        {roomId ? (
           <div className="flex-grow grid grid-cols-1 md:grid-cols-5 gap-6 min-h-0">
             {/* Left Side: Participant Grid */}
             <div className={cn(
@@ -423,10 +419,16 @@ const Room: React.FC = () => {
           <div className="flex-grow flex items-center justify-center">
             <Card className="glass-card p-8 rounded-2xl text-center max-w-md">
               <Sparkles className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-              <h3 className="text-2xl font-bold text-white mb-2">Choose a Room</h3>
-              <p className="text-gray-300">
-                Select a room above that matches your current mood to start connecting with others.
+              <h3 className="text-2xl font-bold text-white mb-2">No Room Joined</h3>
+              <p className="text-gray-300 mb-4">
+                It looks like you haven't joined a room yet. You can go back to the welcome page to join your {mood} room.
               </p>
+              <Button
+                onClick={() => navigate(`/welcome?mood=${encodeURIComponent(mood)}`)}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+              >
+                Go to Welcome Page
+              </Button>
             </Card>
           </div>
         )}
