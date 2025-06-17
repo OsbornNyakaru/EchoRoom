@@ -4,31 +4,70 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import TypingIndicator from './TypingIndicator';
 import { useSocketContext } from '../../context/SocketContext';
-import { MessageSquare, Users, Settings, Maximize2, Minimize2 } from 'lucide-react';
+import { MessageSquare, Users, Settings, Maximize2, Minimize2, Hash, Sparkles, Activity } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 
 const ChatWindow: React.FC = () => {
   const { messages, typingUsers, sendMessage, startTyping, stopTyping, userId, participants, roomId } = useSocketContext();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+        setShowScrollToBottom(false);
+      } else {
+        setShowScrollToBottom(true);
+      }
     }
   }, [messages]);
+
+  // Handle scroll to check if user is at bottom
+  const handleScroll = () => {
+    if (messagesContainerRef.current) {
+      const container = messagesContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      setShowScrollToBottom(!isNearBottom && messages.length > 0);
+    }
+  };
+
+  const scrollToBottom = () => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   if (!roomId) {
     return (
       <div className="flex flex-col h-full glass-card rounded-2xl p-6">
         <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              <MessageSquare className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+            </motion.div>
             <h3 className="text-xl font-semibold text-white mb-2">No Room Selected</h3>
             <p className="text-gray-400">Choose a room to start chatting</p>
-          </div>
+          </motion.div>
         </div>
       </div>
     );
@@ -37,26 +76,56 @@ const ChatWindow: React.FC = () => {
   return (
     <motion.div
       className={cn(
-        'flex flex-col glass-card rounded-2xl overflow-hidden',
+        'flex flex-col glass-card rounded-2xl overflow-hidden relative',
         isExpanded ? 'fixed inset-4 z-50' : 'h-full'
       )}
       layout
       transition={{ duration: 0.3 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
     >
-      {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5">
+      {/* Enhanced Chat Header */}
+      <div className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/10">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <MessageSquare className="h-6 w-6 text-blue-400" />
+            <motion.div
+              animate={{ 
+                scale: [1, 1.1, 1],
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <MessageSquare className="h-6 w-6 text-blue-400" />
+            </motion.div>
             {messages.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse" />
+              <motion.div 
+                className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full"
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
             )}
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-white">Room Chat</h2>
-            <p className="text-xs text-gray-400">
-              {participants.length} participant{participants.length !== 1 ? 's' : ''} online
-            </p>
+            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+              <Hash className="h-4 w-4 text-gray-400" />
+              Room Chat
+            </h2>
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                <span>{participants.length} participant{participants.length !== 1 ? 's' : ''}</span>
+              </div>
+              <span>•</span>
+              <div className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                <span>Live</span>
+              </div>
+              {messages.length > 0 && (
+                <>
+                  <span>•</span>
+                  <span>{messages.length} message{messages.length !== 1 ? 's' : ''}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
         
@@ -77,28 +146,59 @@ const ChatWindow: React.FC = () => {
       </div>
 
       {/* Messages Container */}
-      <div 
-        ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto custom-scrollbar"
-      >
-        <AnimatePresence mode="popLayout">
-          {messages.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center justify-center h-full p-8 text-center"
+      <div className="flex-1 relative overflow-hidden">
+        <div 
+          ref={messagesContainerRef}
+          onScroll={handleScroll}
+          className="h-full overflow-y-auto custom-scrollbar"
+        >
+          <AnimatePresence mode="popLayout">
+            {messages.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="flex flex-col items-center justify-center h-full p-8 text-center"
+              >
+                <div className="glass-card p-6 rounded-2xl max-w-sm">
+                  <motion.div
+                    animate={{ 
+                      scale: [1, 1.1, 1],
+                      rotate: [0, 10, -10, 0]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity }}
+                  >
+                    <Sparkles className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  </motion.div>
+                  <h3 className="text-lg font-semibold text-white mb-2">Start the Conversation</h3>
+                  <p className="text-gray-400 text-sm">
+                    Be the first to share your thoughts and connect with others in this space.
+                  </p>
+                </div>
+              </motion.div>
+            ) : (
+              <MessageList messages={messages} currentUserId={userId} />
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Scroll to Bottom Button */}
+        <AnimatePresence>
+          {showScrollToBottom && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 20 }}
+              onClick={scrollToBottom}
+              className="absolute bottom-4 right-4 glass-card p-2 rounded-full border border-white/20 text-white hover:bg-white/10 transition-all duration-200 shadow-lg"
             >
-              <div className="glass-card p-6 rounded-2xl max-w-sm">
-                <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-white mb-2">Start the Conversation</h3>
-                <p className="text-gray-400 text-sm">
-                  Be the first to share your thoughts and connect with others in this space.
-                </p>
-              </div>
-            </motion.div>
-          ) : (
-            <MessageList messages={messages} currentUserId={userId} />
+              <motion.div
+                animate={{ y: [0, -2, 0] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              >
+                ↓
+              </motion.div>
+            </motion.button>
           )}
         </AnimatePresence>
       </div>
@@ -110,15 +210,15 @@ const ChatWindow: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-2 border-t border-white/10"
+            className="px-4 py-2 border-t border-white/10 bg-white/5"
           >
             <TypingIndicator typingUsers={typingUsers} />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Message Input */}
-      <div className="border-t border-white/10 bg-white/5">
+      {/* Enhanced Message Input */}
+      <div className="border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10">
         <MessageInput
           onSendMessage={sendMessage}
           onTypingStart={startTyping}
