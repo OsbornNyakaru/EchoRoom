@@ -27,17 +27,27 @@ interface SocketContextType {
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
-// Generate a proper UUID
+// Generate a proper UUID v4
 const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
   }
-  // Fallback for older browsers
+  // Fallback for older browsers - generates RFC 4122 compliant UUID v4
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
     const v = c == 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+};
+
+// Clear any existing old-format userIds from localStorage
+const clearOldUserData = () => {
+  const existingUserId = localStorage.getItem('echoroom_userId');
+  if (existingUserId && !existingUserId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+    console.log('[SocketContext] Clearing old format userId:', existingUserId);
+    localStorage.removeItem('echoroom_userId');
+    localStorage.removeItem('echoroom_userName');
+  }
 };
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -48,10 +58,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [typingUsers, setTypingUsers] = useState<TypingUser[]>([]);
   
+  // Clear old data first
+  useEffect(() => {
+    clearOldUserData();
+  }, []);
+  
   // Generate proper UUID for userId
-  const userIdRef = useRef<string>(
-    localStorage.getItem('echoroom_userId') || generateUUID()
-  );
+  const userIdRef = useRef<string>(() => {
+    const stored = localStorage.getItem('echoroom_userId');
+    if (stored && stored.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+      return stored;
+    }
+    const newUUID = generateUUID();
+    console.log('[SocketContext] Generated new UUID:', newUUID);
+    return newUUID;
+  });
+  
   const [userName, setUserNameState] = useState<string>(
     localStorage.getItem('echoroom_userName') || generateAnonymousUserName()
   );
@@ -60,6 +82,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     localStorage.setItem('echoroom_userId', userIdRef.current);
     localStorage.setItem('echoroom_userName', userName);
+    console.log('[SocketContext] Persisted userId:', userIdRef.current);
   }, [userName]);
 
   const setUserName = useCallback((name: string) => {
@@ -71,6 +94,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const joinRoom = useCallback(async (roomData: JoinRoomData) => {
     if (socket && isConnected) {
       try {
+        // Ensure we're using a valid UUID
+        const currentUserId = userIdRef.current;
+        console.log('[SocketContext] Using userId for join:', currentUserId);
+        
+        // Validate UUID format
+        if (!currentUserId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)) {
+          console.error('[SocketContext] Invalid UUID format:', currentUserId);
+          // Generate a new UUID if the current one is invalid
+          const newUUID = generateUUID();
+          userIdRef.current = newUUID;
+          localStorage.setItem('echoroom_userId', newUUID);
+          console.log('[SocketContext] Generated new UUID to replace invalid one:', newUUID);
+        }
+
         // First, create/update participant in database
         const participantData = {
           user_id: userIdRef.current,
@@ -93,11 +130,13 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         });
 
         if (!response.ok) {
-          throw new Error(`Failed to create participant: ${response.status}`);
+          const errorText = await response.text();
+          console.error('[SocketContext] Participant creation failed:', response.status, errorText);
+          throw new Error(`Failed to create participant: ${response.status} - ${errorText}`);
         }
 
         const participant = await response.json();
-        console.log('[SocketContext] Participant created:', participant);
+        console.log('[SocketContext] Participant created successfully:', participant);
 
         // Then emit socket event to join room
         const dataToSend = { 
@@ -111,9 +150,11 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         
       } catch (error) {
         console.error('[SocketContext] Error joining room:', error);
+        throw error; // Re-throw to handle in UI
       }
     } else {
       console.warn('[SocketContext] Cannot join room: socket not connected');
+      throw new Error('Socket not connected');
     }
   }, [isConnected]);
 
