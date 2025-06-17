@@ -362,27 +362,30 @@ const ChatWindow: React.FC = () => {
               variant="outline"
               size="sm"
               className="glass-card border-white/20 text-white hover:bg-white/10 p-1.5 rounded-lg"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
-              <Eye className="h-3 w-3" />
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Eye className="h-3 w-3" />
+              </motion.div>
             </Button>
           </motion.div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="glass-card border-white/20 text-white hover:bg-white/10"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isExpanded ? (
-              <Minimize2 className="h-4 w-4" />
-            ) : (
-              <Maximize2 className="h-4 w-4" />
-            )}
-          </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="glass-card border-white/20 text-white hover:bg-white/10"
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          </motion.div>
         </div>
       </motion.div>
 
