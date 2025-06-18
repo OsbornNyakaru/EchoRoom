@@ -20,7 +20,8 @@ import {
   Heart,
   Brain,
   Eye,
-  Shield
+  Shield,
+  Edit3
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
@@ -330,9 +331,9 @@ const ChatWindow: React.FC = () => {
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1, repeat: Infinity }}
                     >
-                      <Zap className="h-3 w-3 text-yellow-400" />
+                      <Edit3 className="h-3 w-3 text-blue-400" />
                     </motion.div>
-                    <span className="text-yellow-400">
+                    <span className="text-blue-400">
                       {typingUsers.length} typing...
                     </span>
                   </div>
@@ -521,7 +522,7 @@ const ChatWindow: React.FC = () => {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="px-4 py-2 border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm"
+            className="px-4 py-3 border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm"
           >
             <TypingIndicator typingUsers={typingUsers} />
           </motion.div>
