@@ -19,10 +19,12 @@ app.use(express.static('public'));
 // Routes
 const sessionRoutes = require('./routes/sessions');
 const messageRoutes = require('./routes/messages');
-const participantRoutes = require('./routes/participants'); // Add this line
+const participantRoutes = require('./routes/participants');
+const tavusRoutes = require('./routes/tavus'); // Add Tavus routes
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/participants', participantRoutes); // Add this line
+app.use('/api/participants', participantRoutes);
+app.use('/api/tavus', tavusRoutes); // Add Tavus routes
 
 // SOCKET.IO
 const { createClient } = require('@supabase/supabase-js');

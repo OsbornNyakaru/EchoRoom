@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSocketContext } from '../context/SocketContext';
 import ChatWindow from '../components/chat/ChatWindow';
+import TavusAvatarCard from '../components/TavusAvatarCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -231,6 +232,9 @@ const Room: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [hasPlayedZoom, setHasPlayedZoom] = useState(false);
+  
+  // Tavus Avatar state
+  const [isTavusOpen, setIsTavusOpen] = useState(false);
 
   const moodColor = getMoodColor(mood);
   const MoodIcon = getMoodIcon(mood);
@@ -312,6 +316,15 @@ const Room: React.FC = () => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Tavus Avatar handlers
+  const handleTavusToggle = () => {
+    setIsTavusOpen(!isTavusOpen);
+  };
+
+  const handleTavusClose = () => {
+    setIsTavusOpen(false);
   };
 
   if (isLoading) {
@@ -475,7 +488,7 @@ const Room: React.FC = () => {
             {/* Left Side: Participant Grid */}
             <motion.div 
               className={cn(
-                'md:col-span-2',
+                'md:col-span-2 relative',
                 currentView === 'chat' ? 'hidden md:block' : ''
               )}
               initial={{ opacity: 0, x: -50 }}
@@ -621,6 +634,14 @@ const Room: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Tavus Avatar Card */}
+      <TavusAvatarCard
+        mood={mood}
+        isOpen={isTavusOpen}
+        onToggle={handleTavusToggle}
+        onClose={handleTavusClose}
+      />
     </div>
   );
 };
