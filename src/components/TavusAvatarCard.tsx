@@ -194,6 +194,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
       setIsConnected(false);
       setIsConnecting(false);
       setError(null);
+      setIsExpanded(false);
       onClose();
     } catch (err) {
       console.error('Error closing Tavus session:', err);
@@ -228,7 +229,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   if (!isOpen) {
     return (
       <motion.div
-        className="fixed bottom-32 left-6 z-40"
+        className="absolute bottom-6 left-6 z-30"
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -271,200 +272,215 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   }
 
   return (
-    <motion.div
-      className={cn(
-        'fixed z-50 glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/20',
-        isExpanded 
-          ? 'bottom-32 left-6 right-6 top-32' 
-          : 'bottom-32 left-6 w-80 h-96'
-      )}
-      initial={{ opacity: 0, scale: 0.9, y: 20 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.4, type: "spring" }}
-      style={{
-        background: `linear-gradient(135deg, ${moodColor}10 0%, rgba(255, 255, 255, 0.08) 100%)`,
-        borderColor: moodColor + '30'
-      }}
-    >
-      {/* Header */}
-      <div 
-        className="p-4 border-b border-white/10 relative overflow-hidden"
-        style={{
-          background: `linear-gradient(90deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.05) 100%)`
-        }}
-      >
-        {/* Animated background particles */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[...Array(3)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-white/20 rounded-full"
-              animate={{
-                x: [0, 100, 0],
-                y: [0, -30, 0],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 3 + i,
-                repeat: Infinity,
-                delay: i * 0.8,
-              }}
-              style={{
-                left: `${20 + i * 25}%`,
-                top: `${30 + i * 10}%`,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-3">
-            <motion.div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: moodColor + '20', border: `2px solid ${moodColor}40` }}
-              animate={{ 
-                scale: [1, 1.05, 1],
-                rotate: [0, 5, -5, 0]
-              }}
-              transition={{ duration: 4, repeat: Infinity }}
-            >
-              <Bot className="h-5 w-5" style={{ color: moodColor }} />
-            </motion.div>
-            <div>
-              <h3 className="text-white font-semibold flex items-center gap-2">
-                Tavus AI Avatar
-                {isConnected && (
-                  <motion.div
-                    className="w-2 h-2 bg-green-400 rounded-full"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
-              </h3>
-              <p className="text-xs text-gray-400">
-                {isConnecting ? 'Connecting...' : 
-                 isConnected ? 'Connected' : 
-                 error ? 'Connection failed' : 'Ready to connect'}
-              </p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => setIsExpanded(!isExpanded)}
-              variant="outline"
-              size="sm"
-              className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
-            >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            </Button>
-            <Button
-              onClick={handleClose}
-              variant="outline"
-              size="sm"
-              className="glass-card border-red-400/30 text-red-400 hover:bg-red-400/10 p-2"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Video Container */}
-      <div className="flex-1 relative bg-black/20">
-        {error ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <Zap className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              </motion.div>
-              <p className="text-red-400 font-medium">{error}</p>
-              <p className="text-gray-400 text-sm mt-2">Please try again</p>
-            </div>
-          </div>
-        ) : isConnecting ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <Bot className="h-12 w-12 text-blue-400 mx-auto mb-4" />
-              </motion.div>
-              <p className="text-white font-medium">Connecting to AI Avatar...</p>
-              <p className="text-gray-400 text-sm mt-2">Setting up your conversation</p>
-            </div>
-          </div>
-        ) : (
-          <div ref={containerRef} className="w-full h-full" />
+    <>
+      {/* Backdrop overlay when expanded */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm z-40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsExpanded(false)}
+          />
         )}
-      </div>
+      </AnimatePresence>
 
-      {/* Controls */}
-      <div 
-        className="p-4 border-t border-white/10"
+      <motion.div
+        className={cn(
+          'absolute z-50 glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/20',
+          isExpanded 
+            ? 'inset-4' // Full overlay when expanded
+            : 'bottom-6 left-6 w-80 h-96' // Small card in bottom left
+        )}
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.4, type: "spring" }}
         style={{
-          background: `linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, ${moodColor}10 100%)`
+          background: `linear-gradient(135deg, ${moodColor}10 0%, rgba(255, 255, 255, 0.08) 100%)`,
+          borderColor: moodColor + '30'
         }}
       >
-        <div className="flex items-center justify-center gap-3">
-          <Button
-            onClick={toggleVideo}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "glass-card border-white/20 text-white hover:bg-white/10 p-2",
-              !isVideoEnabled && "bg-red-500/20 border-red-400/50 text-red-400"
-            )}
-            disabled={!isConnected}
-          >
-            {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-          </Button>
-          
-          <Button
-            onClick={toggleMute}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "glass-card border-white/20 text-white hover:bg-white/10 p-2",
-              isMuted && "bg-red-500/20 border-red-400/50 text-red-400"
-            )}
-            disabled={!isConnected}
-          >
-            {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-          </Button>
-          
-          <Button
-            onClick={toggleAudio}
-            variant="outline"
-            size="sm"
-            className={cn(
-              "glass-card border-white/20 text-white hover:bg-white/10 p-2",
-              !isAudioEnabled && "bg-red-500/20 border-red-400/50 text-red-400"
-            )}
-            disabled={!isConnected}
-          >
-            {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </Button>
+        {/* Header */}
+        <div 
+          className="p-4 border-b border-white/10 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(90deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.05) 100%)`
+          }}
+        >
+          {/* Animated background particles */}
+          <div className="absolute inset-0 overflow-hidden">
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/20 rounded-full"
+                animate={{
+                  x: [0, 100, 0],
+                  y: [0, -30, 0],
+                  opacity: [0, 1, 0],
+                }}
+                transition={{
+                  duration: 3 + i,
+                  repeat: Infinity,
+                  delay: i * 0.8,
+                }}
+                style={{
+                  left: `${20 + i * 25}%`,
+                  top: `${30 + i * 10}%`,
+                }}
+              />
+            ))}
+          </div>
 
-          <div className="flex-1" />
-
-          <div className="flex items-center gap-2 text-xs text-gray-400">
-            <div className={cn(
-              'w-2 h-2 rounded-full',
-              isConnected ? 'bg-green-400 animate-pulse' : 
-              isConnecting ? 'bg-yellow-400 animate-pulse' : 'bg-red-400'
-            )} />
-            <span>
-              {isConnected ? 'Live' : isConnecting ? 'Connecting' : 'Offline'}
-            </span>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <motion.div
+                className="w-10 h-10 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: moodColor + '20', border: `2px solid ${moodColor}40` }}
+                animate={{ 
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 5, -5, 0]
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              >
+                <Bot className="h-5 w-5" style={{ color: moodColor }} />
+              </motion.div>
+              <div>
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  Tavus AI Avatar
+                  {isConnected && (
+                    <motion.div
+                      className="w-2 h-2 bg-green-400 rounded-full"
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </h3>
+                <p className="text-xs text-gray-400">
+                  {isConnecting ? 'Connecting...' : 
+                   isConnected ? 'Connected' : 
+                   error ? 'Connection failed' : 'Ready to connect'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={() => setIsExpanded(!isExpanded)}
+                variant="outline"
+                size="sm"
+                className="glass-card border-white/20 text-white hover:bg-white/10 p-2"
+              >
+                {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              </Button>
+              <Button
+                onClick={handleClose}
+                variant="outline"
+                size="sm"
+                className="glass-card border-red-400/30 text-red-400 hover:bg-red-400/10 p-2"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+
+        {/* Video Container */}
+        <div className="flex-1 relative bg-black/20">
+          {error ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <motion.div
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Zap className="h-12 w-12 text-red-400 mx-auto mb-4" />
+                </motion.div>
+                <p className="text-red-400 font-medium">{error}</p>
+                <p className="text-gray-400 text-sm mt-2">Please try again</p>
+              </div>
+            </div>
+          ) : isConnecting ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Bot className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                </motion.div>
+                <p className="text-white font-medium">Connecting to AI Avatar...</p>
+                <p className="text-gray-400 text-sm mt-2">Setting up your conversation</p>
+              </div>
+            </div>
+          ) : (
+            <div ref={containerRef} className="w-full h-full" />
+          )}
+        </div>
+
+        {/* Controls */}
+        <div 
+          className="p-4 border-t border-white/10"
+          style={{
+            background: `linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, ${moodColor}10 100%)`
+          }}
+        >
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              onClick={toggleVideo}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "glass-card border-white/20 text-white hover:bg-white/10 p-2",
+                !isVideoEnabled && "bg-red-500/20 border-red-400/50 text-red-400"
+              )}
+              disabled={!isConnected}
+            >
+              {isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+            </Button>
+            
+            <Button
+              onClick={toggleMute}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "glass-card border-white/20 text-white hover:bg-white/10 p-2",
+                isMuted && "bg-red-500/20 border-red-400/50 text-red-400"
+              )}
+              disabled={!isConnected}
+            >
+              {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+            
+            <Button
+              onClick={toggleAudio}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "glass-card border-white/20 text-white hover:bg-white/10 p-2",
+                !isAudioEnabled && "bg-red-500/20 border-red-400/50 text-red-400"
+              )}
+              disabled={!isConnected}
+            >
+              {isAudioEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </Button>
+
+            <div className="flex-1" />
+
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <div className={cn(
+                'w-2 h-2 rounded-full',
+                isConnected ? 'bg-green-400 animate-pulse' : 
+                isConnecting ? 'bg-yellow-400 animate-pulse' : 'bg-red-400'
+              )} />
+              <span>
+                {isConnected ? 'Live' : isConnecting ? 'Connecting' : 'Offline'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+    </>
   );
 };
 
