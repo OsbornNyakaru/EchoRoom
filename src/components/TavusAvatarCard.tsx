@@ -20,6 +20,10 @@ import {
 import { cn } from '@/lib/utils';
 import DailyIframe from '@daily-co/daily-js';
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const tavusApiKey = import.meta.env.VITE_TAVUS_API_KEY;
+const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
+
 interface TavusAvatarCardProps {
   mood: string;
   isOpen: boolean;
@@ -66,13 +70,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         setIsConnecting(true);
         setError(null);
 
-        // Create Tavus conversation via backend
-        const response = await fetch('/api/tavus/create-conversation', {
+        // Call Tavus API directly
+        const response = await fetch('https://tavusapi.com/v2/conversations', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'x-api-key': tavusApiKey,
           },
-          body: JSON.stringify({ mood }),
+          body: JSON.stringify({ persona_id: personaId, properties: { apply_greenscreen: true }, mood }),
         });
 
         if (!response.ok) {
@@ -104,7 +109,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         setIsConnecting(true);
 
         // Get Daily room URL from backend
-        const response = await fetch('/api/tavus/get-daily-room', {
+        const response = await fetch(`${BACKEND_URL}/api/tavus/get-daily-room`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -181,7 +186,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
 
       if (conversationId) {
         // End Tavus conversation
-        await fetch('/api/tavus/end-conversation', {
+        await fetch(`${BACKEND_URL}/api/tavus/end-conversation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
