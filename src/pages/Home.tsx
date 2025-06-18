@@ -8,6 +8,7 @@ import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import FloatingParticles from "../components/floating-particles"
 import ElevenLabsConvoAIWidget from "../components/ElevenLabsConvoAIWidget"
+import SoundToggle from "../components/ui/SoundToggle"
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -80,6 +81,9 @@ export default function HomePage() {
     <div className="aurora-bg grid-pattern min-h-screen relative">
       <FloatingParticles />
 
+      {/* Sound Toggle */}
+      <SoundToggle className="fixed top-4 left-4 z-50" />
+
       <div className="relative z-10 flex flex-col items-center pt-20 pb-10 min-h-screen p-6 md:p-10">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -132,5 +136,4 @@ export default function HomePage() {
       <ElevenLabsConvoAIWidget agentId="agent_01jxcd8ch5fzd801q9k9g6q8b3" />
     </div>
   )
-} 
-
+}

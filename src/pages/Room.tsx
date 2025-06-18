@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { playZoom } from '../lib/soundUtils';
 
 interface VoiceIndicatorProps {
   isSpeaking: boolean;
@@ -228,6 +229,7 @@ const Room: React.FC = () => {
   const [sessionTime, setSessionTime] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
+  const [hasPlayedZoom, setHasPlayedZoom] = useState(false);
 
   const moodColor = getMoodColor(mood);
   const MoodIcon = getMoodIcon(mood);
@@ -241,6 +243,18 @@ const Room: React.FC = () => {
       setConnectionStatus('disconnected');
     }
   }, [isConnected]);
+
+  // Play zoom sound when successfully connected to room
+  useEffect(() => {
+    if (roomId && isConnected && !hasPlayedZoom) {
+      const timer = setTimeout(() => {
+        playZoom();
+        setHasPlayedZoom(true);
+      }, 800); // Delay to ensure room is fully loaded
+
+      return () => clearTimeout(timer);
+    }
+  }, [roomId, isConnected, hasPlayedZoom]);
 
   // Session timer
   useEffect(() => {

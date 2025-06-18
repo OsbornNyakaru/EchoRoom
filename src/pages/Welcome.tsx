@@ -9,6 +9,7 @@ import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2 } from "lu
 import FloatingParticles from "../components/floating-particles"
 import UserNameModal from "../components/UserNameModal"
 import { useSocketContext } from "../context/SocketContext"
+import { playBeep } from "../lib/soundUtils"
 
 interface ChatSession {
   id: string;
@@ -29,6 +30,7 @@ export default function Welcome() {
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [showUserNameModal, setShowUserNameModal] = useState(false);
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
+  const [hasPlayedBeep, setHasPlayedBeep] = useState(false);
 
   const validMoods = ["hopeful", "lonely", "motivated", "calm", "loving", "joyful"]
   const validatedMood = validMoods.includes(mood) ? mood : "calm"
@@ -39,6 +41,18 @@ export default function Welcome() {
   const [isReady, setIsReady] = useState(false)
   const REDIRECT_DELAY_MS = 5000; // 5 seconds delay for auto-redirection
   const [hasUserManuallyJoined, setHasUserManuallyJoined] = useState(false);
+
+  // Play beep sound when component mounts (before video plays)
+  useEffect(() => {
+    if (!hasPlayedBeep) {
+      const timer = setTimeout(() => {
+        playBeep();
+        setHasPlayedBeep(true);
+      }, 500); // Small delay to ensure page is loaded
+
+      return () => clearTimeout(timer);
+    }
+  }, [hasPlayedBeep]);
 
   const handleJoinRoom = useCallback(async () => {
     if (!isConnected || !userId) {
