@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the complete Supabase database schema required for the EchoRoom voice-based group chat platform. The database is designed to support real-time chat functionality through a Node.js + Express backend with Socket.IO integration.
+This document outlines the complete Supabase database schema required for the EchoRoom voice-based group chat platform. The database is designed to support real-time chat functionality through a Node.js + Express backend with Socket.IO integration, and includes Tavus AI avatar integration.
 
 ## Database Schema
 
@@ -93,6 +93,21 @@ CREATE INDEX idx_message_reactions_message ON message_reactions(message_id);
 CREATE INDEX idx_message_reactions_user ON message_reactions(user_id);
 ```
 
+#### 5. `persona` (Tavus AI Personas)
+Stores Tavus persona IDs for AI avatar integration.
+
+```sql
+CREATE TABLE persona (
+    id SERIAL PRIMARY KEY,
+    persona_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+);
+
+-- Indexes
+CREATE INDEX idx_persona_persona_id ON persona(persona_id);
+CREATE INDEX idx_persona_created_at ON persona(created_at DESC);
+```
+
 ### Row Level Security (RLS) Policies
 
 Enable RLS on all tables and create appropriate policies:
@@ -103,6 +118,7 @@ ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE message_reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE persona ENABLE ROW LEVEL SECURITY;
 
 -- Sessions - Public read access
 CREATE POLICY "Sessions are publicly readable" ON sessions
@@ -131,11 +147,21 @@ CREATE POLICY "Message reactions are publicly readable" ON message_reactions
 
 CREATE POLICY "Users can add reactions" ON message_reactions
     FOR INSERT WITH CHECK (true);
+
+-- Persona - Public read access, authenticated write access
+CREATE POLICY "Personas are publicly readable" ON persona
+    FOR SELECT USING (true);
+
+CREATE POLICY "Authenticated users can insert personas" ON persona
+    FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Authenticated users can update personas" ON persona
+    FOR UPDATE USING (true);
 ```
 
 ## Backend API Endpoints
 
-The Node.js + Express backend should provide these REST endpoints:
+The Node.js + Express backend provides these REST endpoints:
 
 ### Session Management
 ```
@@ -170,6 +196,61 @@ GET /api/sessions/:sessionId/messages
 - Gets message history for a session
 - Query params: limit, offset, before_timestamp
 - Response: Array of message objects with reactions
+```
+
+### Persona Management
+```
+GET /api/personas
+- Returns all available personas
+- Response: Array of persona objects
+
+GET /api/personas/:id
+- Gets specific persona by ID
+- Response: Persona object
+
+GET /api/personas/by-mood/:mood
+- Gets persona for specific mood
+- Response: Persona object
+
+POST /api/personas
+- Creates a new persona
+- Body: { persona_id }
+- Response: Created persona object
+
+PUT /api/personas/:id
+- Updates persona
+- Body: { persona_id }
+- Response: Updated persona object
+
+DELETE /api/personas/:id
+- Deletes persona
+- Response: Success message
+```
+
+### Tavus Integration
+```
+POST /api/tavus/create-conversation
+- Creates a new Tavus conversation
+- Body: { mood }
+- Response: { conversation_id, conversation_url, status, persona_id }
+
+POST /api/tavus/get-daily-room
+- Gets Daily room URL for Tavus conversation
+- Body: { conversation_id }
+- Response: { room_url }
+
+POST /api/tavus/end-conversation
+- Ends a Tavus conversation
+- Body: { conversation_id }
+- Response: { success: true }
+
+GET /api/tavus/personas
+- Gets all available Tavus personas
+- Response: Array of persona objects
+
+GET /api/tavus/personas/:mood
+- Gets persona for specific mood
+- Response: Persona object
 ```
 
 ## Socket.IO Events
@@ -352,9 +433,10 @@ CREATE TRIGGER update_participant_count_trigger
 
 ## Data Seeding
 
-Initial data for chat sessions:
+Initial data for chat sessions and personas:
 
 ```sql
+-- Sessions
 INSERT INTO sessions (id, category, description, is_active, max_participants) VALUES
 ('3c0baaf2-45d5-4986-8a56-e205ad9e1c4f', 'Motivated', 'Ready to take on challenges', true, 6),
 ('9dcaa32f-b371-4ebf-9153-8747a16e19b2', 'Hopeful', 'Looking forward with optimism', true, 6),
@@ -362,6 +444,15 @@ INSERT INTO sessions (id, category, description, is_active, max_participants) VA
 ('cd90792e-bb54-4a5b-b1b9-59fb27fbc49f', 'Joyful', 'Filled with happiness and gratitude', true, 6),
 ('647161c4-0bfc-4142-9f7a-fc6eefb17325', 'Calm', 'Finding peace in the moment', true, 6),
 ('5b169685-1790-493e-a569-3aeec7b60b33', 'Loving', 'Embracing warmth and compassion', true, 6);
+
+-- Personas
+INSERT INTO persona (persona_id) VALUES 
+('default_hopeful_persona'),
+('default_lonely_persona'),
+('default_motivated_persona'),
+('default_calm_persona'),
+('default_loving_persona'),
+('default_joyful_persona');
 ```
 
 ## Key Integration Points
@@ -387,6 +478,11 @@ INSERT INTO sessions (id, category, description, is_active, max_participants) VA
    - Participant avatars and mood indicators reflect database state
    - Real-time typing indicators use current participant names
 
+5. **Tavus AI Integration**:
+   - Personas are stored in database and retrieved by mood
+   - Conversations are created with mood-specific personas
+   - Daily.co integration provides video/audio communication with AI avatars
+
 ### Database Schema Benefits
 
 - **Persistent Participant State**: Voice status, names, and mood persist across reconnections
@@ -394,5 +490,7 @@ INSERT INTO sessions (id, category, description, is_active, max_participants) VA
 - **Anonymous Identity**: Users can have consistent identity within sessions without registration
 - **Audit Trail**: All messages and participant actions are logged for moderation
 - **Performance**: Proper indexing ensures fast queries even with many concurrent users
+- **AI Avatar Support**: Persona management enables mood-specific AI interactions
+- **Extensible Design**: Easy to add new features like conversation history, user preferences, etc.
 
-This integration ensures that the chat interface displays accurate, up-to-date participant information while maintaining the anonymous, ephemeral nature of the EchoRoom experience.
+This integration ensures that the chat interface displays accurate, up-to-date participant information while maintaining the anonymous, ephemeral nature of the EchoRoom experience, now enhanced with AI avatar capabilities through Tavus integration.
