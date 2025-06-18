@@ -66,12 +66,16 @@ const MessageInput: React.FC<MessageInputProps> = ({
   }, [message]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value);
+    const newValue = e.target.value;
+    setMessage(newValue);
     
     // Handle typing indicators
-    if (e.target.value.length > 0 && !isTyping) {
+    if (newValue.length > 0 && !isTyping) {
       onTypingStart();
       setIsTyping(true);
+    } else if (newValue.length === 0 && isTyping) {
+      onTypingStop();
+      setIsTyping(false);
     }
     
     // Clear existing timeout
@@ -79,11 +83,13 @@ const MessageInput: React.FC<MessageInputProps> = ({
       clearTimeout(typingTimeoutRef.current);
     }
     
-    // Set new timeout to stop typing
-    typingTimeoutRef.current = setTimeout(() => {
-      onTypingStop();
-      setIsTyping(false);
-    }, 1500);
+    // Set new timeout to stop typing after user stops typing
+    if (newValue.length > 0) {
+      typingTimeoutRef.current = setTimeout(() => {
+        onTypingStop();
+        setIsTyping(false);
+      }, 2000); // Stop typing indicator after 2 seconds of inactivity
+    }
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -97,7 +103,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
       onSendMessage(trimmedMessage);
       setMessage('');
       
-      // Clear typing state
+      // Clear typing state immediately when sending
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
@@ -114,6 +120,29 @@ const MessageInput: React.FC<MessageInputProps> = ({
       sendMessage();
     }
   };
+
+  // Handle focus events for typing indicators
+  const handleFocus = () => {
+    setIsFocused(true);
+    if (message.length > 0 && !isTyping) {
+      onTypingStart();
+      setIsTyping(true);
+    }
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    // Don't immediately stop typing on blur, let the timeout handle it
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const quickReplies = [
     { emoji: '👍', label: 'Agree' },
@@ -158,6 +187,34 @@ const MessageInput: React.FC<MessageInputProps> = ({
             <span className="text-white text-sm font-medium">{currentUser.userName}</span>
             <MoodIcon className="w-3 h-3" style={{ color: moodColor }} />
             <span className="text-xs text-gray-400 capitalize">{currentUser.mood}</span>
+            
+            {/* Real-time typing indicator for current user */}
+            {isTyping && message.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex items-center gap-1 ml-auto"
+              >
+                <span className="text-xs text-blue-400">typing</span>
+                <div className="flex gap-1">
+                  {[...Array(3)].map((_, i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1 h-1 bg-blue-400 rounded-full"
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.5, 1, 0.5],
+                      }}
+                      transition={{
+                        duration: 1,
+                        repeat: Infinity,
+                        delay: i * 0.2,
+                      }}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            )}
           </div>
         </motion.div>
       )}
@@ -243,8 +300,8 @@ const MessageInput: React.FC<MessageInputProps> = ({
             value={message}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
             placeholder="Type your message..."
             className={cn(
               'w-full p-3 pr-12 rounded-2xl resize-none transition-all duration-200',
@@ -267,36 +324,6 @@ const MessageInput: React.FC<MessageInputProps> = ({
                 className="absolute bottom-1 right-3 text-xs text-gray-400"
               >
                 {message.length}/500
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Typing indicator for current user */}
-          <AnimatePresence>
-            {isTyping && message.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute top-1 right-3 flex items-center gap-1"
-              >
-                <div className="flex gap-1">
-                  {[...Array(3)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      className="w-1 h-1 bg-blue-400 rounded-full"
-                      animate={{
-                        scale: [1, 1.5, 1],
-                        opacity: [0.5, 1, 0.5],
-                      }}
-                      transition={{
-                        duration: 1,
-                        repeat: Infinity,
-                        delay: i * 0.2,
-                      }}
-                    />
-                  ))}
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
