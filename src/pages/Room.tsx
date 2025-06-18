@@ -30,6 +30,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { playZoom } from '../lib/soundUtils';
 
+
 interface VoiceIndicatorProps {
   isSpeaking: boolean;
   isMuted: boolean;
