@@ -71,7 +71,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
         </motion.div>
 
         {/* User Avatars - Fixed layout, no scrolling */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-shrink-0">
           <AnimatePresence>
             {typingUsers.slice(0, 3).map((user, index) => (
               <motion.div
@@ -85,7 +85,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
                   stiffness: 400,
                   damping: 25
                 }}
-                className="relative"
+                className="relative flex-shrink-0"
               >
                 <Avatar className="w-8 h-8 border-2 border-white/30 shadow-lg ring-2 ring-blue-400/30">
                   <AvatarImage src={user.avatar} alt={user.userName} />
@@ -134,7 +134,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-white/30 flex items-center justify-center text-xs text-white font-bold shadow-lg ring-2 ring-purple-400/30"
+              className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-white/30 flex items-center justify-center text-xs text-white font-bold shadow-lg ring-2 ring-purple-400/30 flex-shrink-0"
             >
               +{typingUsers.length - 3}
             </motion.div>
@@ -178,7 +178,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
         </div>
 
         {/* Floating particles effect */}
-        <div className="absolute inset-0 rounded-xl pointer-events-none">
+        <div className="absolute inset-0 rounded-xl pointer-events-none overflow-hidden">
           {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}

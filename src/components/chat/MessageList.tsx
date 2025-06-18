@@ -227,7 +227,7 @@ const MessageBubble: React.FC<{
                     y: -2,
                     transition: { type: "spring", stiffness: 400, damping: 10 }
                   }}
-                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors"
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors flex-shrink-0"
                 >
                   <span>{reaction.emoji}</span>
                   <span className="text-white/80 font-medium">{reaction.count}</span>
@@ -240,7 +240,7 @@ const MessageBubble: React.FC<{
                     y: -2,
                     transition: { type: "spring", stiffness: 400, damping: 10 }
                   }}
-                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors"
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors flex-shrink-0"
                 >
                   <span className="text-white/80 font-medium">+{message.reactions.length - 5}</span>
                 </motion.div>
