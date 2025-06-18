@@ -1,8 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+const VITE_BACKEND_URL = import.meta.env.VITE_VITE_BACKEND_URL || '${VITE_BACKEND_URL}/';
 
-const socket = io(BACKEND_URL, {
+const socket = io(VITE_BACKEND_URL, {
   transports: ['websocket', 'polling'],
   withCredentials: true,
 }) as Socket;

@@ -126,7 +126,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         console.log('[SocketContext] Creating participant in database:', participantData);
         
-        const response = await fetch('http://localhost:5000/api/participants', {
+        const response = await fetch(`${VITE_BACKEND_URL}/api/participants`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -167,7 +167,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && roomId && isConnected) {
       try {
         // Update participant status in database
-        const response = await fetch(`http://localhost:5000/api/participants/${userId}/${roomId}`, {
+        const response = await fetch(`${VITE_BACKEND_URL}/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && isConnected && roomId) {
       try {
         // Update participant voice status in database
-        const response = await fetch(`http://localhost:5000/api/participants/${userId}/${roomId}`, {
+        const response = await fetch(`${VITE_BACKEND_URL}/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

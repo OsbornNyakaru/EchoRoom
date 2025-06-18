@@ -278,7 +278,7 @@ const Room: React.FC = () => {
 
       try {
         console.log('[Room.tsx] Auto-joining room for mood:', mood);
-        const response = await fetch('http://localhost:5000/api/sessions');
+        const response = await fetch('https://backend-echo-i220.onrender.com/api/sessions');
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
