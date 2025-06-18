@@ -29,13 +29,68 @@
         40% { transform: translateY(-10px); }
         80% { transform: translateY(-5px); }
       }
+
+      /* ConvoAI Widget Responsive Styles */
+      elevenlabs-convai {
+        position: fixed !important;
+        bottom: 20px !important;
+        right: 20px !important;
+        z-index: 9999 !important;
+      }
+
+      /* Mobile styles - show only disk */
+      @media (max-width: 768px) {
+        elevenlabs-convai {
+          /* Force compact mode on mobile */
+          --convai-widget-width: 60px !important;
+          --convai-widget-height: 60px !important;
+        }
+        
+        /* Hide any expanded panels on mobile */
+        elevenlabs-convai::part(panel),
+        elevenlabs-convai::part(chat-panel),
+        elevenlabs-convai::part(expanded-view) {
+          display: none !important;
+        }
+        
+        /* Ensure only the trigger button is visible */
+        elevenlabs-convai::part(trigger) {
+          width: 60px !important;
+          height: 60px !important;
+          border-radius: 50% !important;
+        }
+      }
+
+      /* Desktop styles - full functionality */
+      @media (min-width: 769px) {
+        elevenlabs-convai {
+          --convai-widget-width: auto !important;
+          --convai-widget-height: auto !important;
+        }
+      }
+
+      /* Additional mobile optimizations */
+      @media (max-width: 480px) {
+        elevenlabs-convai {
+          bottom: 15px !important;
+          right: 15px !important;
+          --convai-widget-width: 50px !important;
+          --convai-widget-height: 50px !important;
+        }
+        
+        elevenlabs-convai::part(trigger) {
+          width: 50px !important;
+          height: 50px !important;
+        }
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     
-    <!-- Bolt.new Badge - Moved slightly lower -->
-    <div class="fixed top-8 right-4 z-50">
+   
+    <!-- Bolt.new Badge -->
+    <div class="fixed top-4 right-4 z-50">
       <a href="https://bolt.new/" target="_blank" rel="noopener noreferrer" 
          class="block transition-all duration-300 hover:shadow-2xl">
         <img src="https://storage.bolt.army/white_circle_360x360.png" 
