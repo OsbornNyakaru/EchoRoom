@@ -228,7 +228,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   if (!isOpen) {
     return (
       <motion.div
-        className="fixed bottom-6 left-6 z-40"
+        className="fixed bottom-32 left-6 z-40"
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -275,8 +275,8 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
       className={cn(
         'fixed z-50 glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/20',
         isExpanded 
-          ? 'bottom-6 left-6 right-6 top-6' 
-          : 'bottom-6 left-6 w-80 h-96'
+          ? 'bottom-32 left-6 right-6 top-32' 
+          : 'bottom-32 left-6 w-80 h-96'
       )}
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
