@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TypingUser } from '../../types/chat';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, Zap, Edit3, Keyboard } from 'lucide-react';
+import { Edit3, Keyboard } from 'lucide-react';
 
 interface TypingIndicatorProps {
   typingUsers: TypingUser[];
@@ -33,7 +33,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
       animate={{ opacity: 1, y: 0, height: 'auto' }}
       exit={{ opacity: 0, y: -10, height: 0 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="relative overflow-hidden"
+      className="relative"
     >
       {/* Animated background gradient */}
       <motion.div
@@ -70,10 +70,10 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
           </div>
         </motion.div>
 
-        {/* User Avatars */}
-        <div className="flex -space-x-2">
+        {/* User Avatars - Fixed layout, no scrolling */}
+        <div className="flex gap-2">
           <AnimatePresence>
-            {typingUsers.slice(0, 4).map((user, index) => (
+            {typingUsers.slice(0, 3).map((user, index) => (
               <motion.div
                 key={user.userId}
                 initial={{ scale: 0, x: -20, opacity: 0 }}
@@ -128,15 +128,15 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
             ))}
           </AnimatePresence>
           
-          {/* Show count if more than 4 users */}
-          {typingUsers.length > 4 && (
+          {/* Show count if more than 3 users */}
+          {typingUsers.length > 3 && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              transition={{ delay: 0.3 }}
               className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-white/30 flex items-center justify-center text-xs text-white font-bold shadow-lg ring-2 ring-purple-400/30"
             >
-              +{typingUsers.length - 4}
+              +{typingUsers.length - 3}
             </motion.div>
           )}
         </div>
@@ -178,7 +178,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingUsers }) => {
         </div>
 
         {/* Floating particles effect */}
-        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
+        <div className="absolute inset-0 rounded-xl pointer-events-none">
           {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}

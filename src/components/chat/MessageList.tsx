@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday, differenceInMinutes } from 'date-fns';
-import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile, Clock, Loader2 } from 'lucide-react';
+import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile, Clock } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -214,21 +214,37 @@ const MessageBubble: React.FC<{
             )}
           </div>
           
-          {/* Reactions */}
+          {/* Reactions - Fixed layout with hover effects, no scrolling */}
           {message.reactions && message.reactions.length > 0 && (
             <div className="flex gap-1 mt-2 flex-wrap">
-              {message.reactions.map((reaction, index) => (
+              {message.reactions.slice(0, 5).map((reaction, index) => (
                 <motion.div
                   key={index}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  whileHover={{ scale: 1.1 }}
+                  whileHover={{ 
+                    scale: 1.1,
+                    y: -2,
+                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                  }}
                   className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors"
                 >
                   <span>{reaction.emoji}</span>
                   <span className="text-white/80 font-medium">{reaction.count}</span>
                 </motion.div>
               ))}
+              {message.reactions.length > 5 && (
+                <motion.div
+                  whileHover={{ 
+                    scale: 1.1,
+                    y: -2,
+                    transition: { type: "spring", stiffness: 400, damping: 10 }
+                  }}
+                  className="bg-white/20 backdrop-blur-sm rounded-full px-2 py-1 text-xs flex items-center gap-1 cursor-pointer hover:bg-white/30 transition-colors"
+                >
+                  <span className="text-white/80 font-medium">+{message.reactions.length - 5}</span>
+                </motion.div>
+              )}
             </div>
           )}
           
