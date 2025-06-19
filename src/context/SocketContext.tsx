@@ -1,13 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import useSocket from '../hooks/useSocket';
-import { Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { Participant, RoomInfo, JoinRoomData, SessionPhase } from '../types/room';
 import { ChatMessage, TypingUser } from '../types/chat';
 import socket from '../lib/socket';
 import { generateAnonymousUserName } from '../lib/utils';
 
 interface SocketContextType {
-  socket: typeof Socket | null;
+  socket: Socket | null;
   isConnected: boolean;
   roomId: string | null;
   participants: Participant[];
@@ -78,6 +78,8 @@ const initializeUserId = (): string => {
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isConnected } = useSocket();
   
+  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  
   const [roomId, setRoomId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -126,7 +128,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         console.log('[SocketContext] Creating participant in database:', participantData);
 
-        const backendUrl = import.meta.env.VITE_BACKEND_URL;
         const response = await fetch(`${backendUrl}/api/participants`, {
           method: 'POST',
           headers: {
@@ -168,7 +169,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && roomId && isConnected) {
       try {
         // Update participant status in database
-        const backendUrl = import.meta.env.VITE_BACKEND_URL;
         const response = await fetch(`${backendUrl}/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
@@ -256,7 +256,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && isConnected && roomId) {
       try {
         // Update participant voice status in database
-        const response = await fetch(`${VITE_BACKEND_URL}/api/participants/${userId}/${roomId}`, {
+        const response = await fetch(`${backendUrl}/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

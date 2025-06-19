@@ -278,7 +278,8 @@ const Room: React.FC = () => {
 
       try {
         console.log('[Room.tsx] Auto-joining room for mood:', mood);
-        const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sessions`);
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const response = await fetch(`${backendUrl}/api/sessions`);
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

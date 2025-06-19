@@ -20,7 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import DailyIframe from '@daily-co/daily-js';
 
-const VITE_BACKEND_URL = import.meta.env.VITE_VITE_BACKEND_URL;
+const VITE_BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 const tavusApiKey = import.meta.env.VITE_TAVUS_API_KEY;
 const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
 
@@ -48,6 +48,9 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   
   const callFrameRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Use a local variable for backend URL
+  const backendUrl = VITE_BACKEND_URL;
 
   const getMoodColor = (mood: string) => {
     const colors = {
@@ -109,7 +112,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         setIsConnecting(true);
 
         // Get Daily room URL from backend
-        const response = await fetch(`${VITE_BACKEND_URL}/api/tavus/get-daily-room`, {
+        const response = await fetch(`${backendUrl}/api/tavus/get-daily-room`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,7 +189,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
 
       if (conversationId) {
         // End Tavus conversation
-        await fetch(`${VITE_BACKEND_URL}/api/tavus/end-conversation`, {
+        await fetch(`${backendUrl}/api/tavus/end-conversation`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
