@@ -4,7 +4,6 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import MessageList from "./MessageList"
-import MessageInput from "./MessageInput"
 import TypingIndicator from "./TypingIndicator"
 import { useSocketContext } from "../../context/SocketContext"
 import {
@@ -25,10 +24,10 @@ import {
 } from "lucide-react"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
+import MessageInput from './MessageInput'
 
 const ChatWindow: React.FC = () => {
-  const { messages, typingUsers, userId, participants, roomId, isConnected, sendMessage, startTyping, stopTyping } =
-    useSocketContext()
+  const { messages, typingUsers, userId, participants, roomId, isConnected, sendMessage, startTyping, stopTyping } = useSocketContext()
   const [isExpanded, setIsExpanded] = useState(false)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -37,14 +36,6 @@ const ChatWindow: React.FC = () => {
   const [isHovering, setIsHovering] = useState(false)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const lastMessageRef = useRef<string | null>(null)
-
-  // Get current user
-  const currentUser = participants.find((p) => p.userId === userId) || {
-    userId,
-    userName: "You",
-    mood: "calm",
-    avatar: "/avatars/default-avatar.png",
-  }
 
   // Track unread messages with advanced logic
   useEffect(() => {
@@ -140,6 +131,8 @@ const ChatWindow: React.FC = () => {
     )
   }
 
+  const currentUser = participants.find((p) => p.userId === userId)
+
   return (
     <motion.div
       className={cn(
@@ -155,7 +148,7 @@ const ChatWindow: React.FC = () => {
     >
       {/* Revolutionary Chat Header */}
       <motion.div
-        className="flex items-center justify-between p-4 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm relative overflow-hidden"
+        className="flex items-center justify-between p-3 lg:p-4 border-b border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm relative overflow-hidden"
         animate={{
           background: isHovering
             ? "linear-gradient(90deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.12) 100%)"
@@ -165,7 +158,7 @@ const ChatWindow: React.FC = () => {
       >
         {/* Animated background particles */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(5)].map((_, i) => (
+          {[...Array(3)].map((_, i) => (
             <motion.div
               key={i}
               className="absolute w-1 h-1 bg-white/20 rounded-full"
@@ -187,7 +180,7 @@ const ChatWindow: React.FC = () => {
           ))}
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex items-center gap-2 lg:gap-3 relative z-10 flex-1 min-w-0">
           <div className="relative">
             <motion.div
               animate={{
@@ -196,14 +189,14 @@ const ChatWindow: React.FC = () => {
               }}
               transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
             >
-              <MessageSquare className="h-6 w-6 text-blue-400" />
+              <MessageSquare className="h-5 w-5 lg:h-6 lg:w-6 text-blue-400" />
             </motion.div>
 
             {/* Advanced notification system */}
             <AnimatePresence>
               {unreadCount > 0 && (
                 <motion.div
-                  className="absolute -top-2 -right-2 min-w-[20px] h-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-bold shadow-lg"
+                  className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs text-white font-bold shadow-lg"
                   initial={{ scale: 0, rotate: -180 }}
                   animate={{ scale: 1, rotate: 0 }}
                   exit={{ scale: 0, rotate: 180 }}
@@ -221,38 +214,44 @@ const ChatWindow: React.FC = () => {
             </AnimatePresence>
           </div>
 
-          <div>
-            <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-              <Hash className="h-4 w-4 text-gray-400" />
-              Room Chat
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base lg:text-lg font-semibold text-white flex items-center gap-2 truncate">
+              <Hash className="h-3 w-3 lg:h-4 lg:w-4 text-gray-400 flex-shrink-0" />
+              <span className="truncate">Room Chat</span>
               <motion.div
                 animate={{ rotate: [0, 360] }}
                 transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+                className="flex-shrink-0"
               >
-                <Sparkles className="h-4 w-4 text-yellow-400" />
+                <Sparkles className="h-3 w-3 lg:h-4 lg:w-4 text-yellow-400" />
               </motion.div>
             </h2>
 
-            {/* Enhanced status bar */}
-            <div className="flex items-center gap-2 text-xs text-gray-400">
+            {/* Enhanced status bar - simplified for mobile */}
+            <div className="flex items-center gap-1 lg:gap-2 text-xs text-gray-400">
               <div className="flex items-center gap-1">
                 <motion.div
-                  className={cn("w-2 h-2 rounded-full", isConnected ? "bg-green-400" : "bg-red-400")}
+                  className={cn("w-1.5 h-1.5 rounded-full", isConnected ? "bg-green-400" : "bg-red-400")}
                   animate={isConnected ? { scale: [1, 1.2, 1] } : { opacity: [1, 0.5, 1] }}
                   transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                 />
-                {isConnected ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-                <span>{isConnected ? "Connected" : "Disconnected"}</span>
+                {isConnected ? (
+                  <Wifi className="h-2.5 w-2.5 lg:h-3 lg:w-3" />
+                ) : (
+                  <WifiOff className="h-2.5 w-2.5 lg:h-3 lg:w-3" />
+                )}
+                <span className="hidden sm:inline">{isConnected ? "Connected" : "Disconnected"}</span>
               </div>
 
-              <span>•</span>
+              <span className="hidden sm:inline">•</span>
               <div className="flex items-center gap-1">
-                <Users className="h-3 w-3" />
-                <span>{participants.length} online</span>
+                <Users className="h-2.5 w-2.5 lg:h-3 lg:w-3" />
+                <span>{participants.length}</span>
+                <span className="hidden lg:inline">online</span>
               </div>
 
-              <span>•</span>
-              <div className="flex items-center gap-1">
+              <span className="hidden lg:inline">•</span>
+              <div className="hidden lg:flex items-center gap-1">
                 <Star className="h-3 w-3" />
                 <span>{messageStats.total} messages</span>
               </div>
@@ -265,9 +264,9 @@ const ChatWindow: React.FC = () => {
                       animate={{ scale: [1, 1.2, 1] }}
                       transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
                     >
-                      <Edit3 className="h-3 w-3 text-blue-400" />
+                      <Edit3 className="h-2.5 w-2.5 lg:h-3 lg:w-3 text-blue-400" />
                     </motion.div>
-                    <span className="text-blue-400">{typingUsers.length} typing...</span>
+                    <span className="text-blue-400 text-xs">{typingUsers.length}</span>
                   </div>
                 </>
               )}
@@ -275,9 +274,9 @@ const ChatWindow: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 relative z-10">
-          {/* Advanced controls */}
-          <motion.div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 lg:gap-2 relative z-10 flex-shrink-0">
+          {/* Advanced controls - simplified for mobile */}
+          <motion.div className="hidden lg:flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -304,9 +303,13 @@ const ChatWindow: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="bg-white/5 border-white/20 text-white hover:bg-white/10"
+              className="bg-white/5 border-white/20 text-white hover:bg-white/10 h-8 w-8 p-0"
             >
-              {isExpanded ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {isExpanded ? (
+                <Minimize2 className="h-3 w-3 lg:h-4 lg:w-4" />
+              ) : (
+                <Maximize2 className="h-3 w-3 lg:h-4 lg:w-4" />
+              )}
             </Button>
           </motion.div>
         </div>
@@ -396,29 +399,29 @@ const ChatWindow: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 20 }}
               onClick={scrollToBottom}
-              className="absolute bottom-4 right-4 bg-white/10 backdrop-blur-sm p-3 rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-200 shadow-lg group"
+              className="absolute bottom-3 right-3 lg:bottom-4 lg:right-4 bg-white/10 backdrop-blur-sm p-2 lg:p-3 rounded-full border border-white/20 text-white hover:bg-white/20 transition-all duration-200 shadow-lg group"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 lg:gap-2">
                 <motion.div
                   animate={{ y: [0, -2, 0] }}
                   transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
                   className="relative"
                 >
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                   <motion.div
                     className="absolute inset-0 text-blue-400"
                     animate={{ opacity: [0, 1, 0] }}
                     transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                   >
-                    <ChevronDown className="h-4 w-4" />
+                    <ChevronDown className="h-3 w-3 lg:h-4 lg:w-4" />
                   </motion.div>
                 </motion.div>
 
                 {unreadCount > 0 && (
                   <motion.span
-                    className="text-xs bg-gradient-to-r from-red-500 to-pink-500 px-2 py-1 rounded-full font-bold"
+                    className="text-xs bg-gradient-to-r from-red-500 to-pink-500 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full font-bold"
                     animate={{ scale: [1, 1.1, 1] }}
                     transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
                   >
@@ -453,15 +456,16 @@ const ChatWindow: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Integrated Message Input */}
-      <div className="border-t border-white/10 bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm">
-        <MessageInput
-          onSendMessage={sendMessage}
-          onTypingStart={startTyping}
-          onTypingStop={stopTyping}
-          currentUser={currentUser}
-        />
-      </div>
+      {roomId && (
+        <div className="border-t bg-white/10 p-2 sticky bottom-0 z-10">
+          <MessageInput
+            onSendMessage={sendMessage}
+            onTypingStart={startTyping}
+            onTypingStop={stopTyping}
+            currentUser={currentUser}
+          />
+        </div>
+      )}
     </motion.div>
   )
 }
