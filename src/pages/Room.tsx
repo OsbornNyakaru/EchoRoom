@@ -302,7 +302,6 @@ const Room: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isParticipantsSheetOpen, setIsParticipantsSheetOpen] = useState(false)
   const chatScrollRef = useRef<HTMLDivElement>(null)
-  const [setShowScrollToBottom] = useState(false)
 
   const moodColor = getMoodColor(mood)
   const MoodIcon = getMoodIcon(mood)
