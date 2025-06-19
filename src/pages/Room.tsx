@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSocketContext } from "../context/SocketContext"
@@ -303,23 +303,16 @@ const Room: React.FC = () => {
   const searchParams = new URLSearchParams(location.search)
   const mood = searchParams.get("mood") || "calm"
 
-  const [currentView] = useState<"chat" | "participants">("chat")
   const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting")
   const [sessionTime, setSessionTime] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
   const [hasPlayedZoom, setHasPlayedZoom] = useState(false)
-
-  // Tavus Avatar state
   const [isTavusOpen, setIsTavusOpen] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isParticipantsSheetOpen, setIsParticipantsSheetOpen] = useState(false)
-  const chatScrollRef = useRef<HTMLDivElement>(null)
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 
   const moodColor = getMoodColor(mood)
-  const moodGradient = getMoodGradient(mood)
   const MoodIcon = getMoodIcon(mood)
 
   const currentUser = participants.find((p) => p.userId === userId) || {
@@ -414,20 +407,6 @@ const Room: React.FC = () => {
 
   const handleTavusClose = () => {
     setIsTavusOpen(false)
-  }
-
-  // Auto-scroll chat to bottom on new message
-  useEffect(() => {
-    if (chatScrollRef.current && currentView === "chat") {
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight
-    }
-  }, [participants, currentView])
-
-  // Show scroll-to-bottom button if not at bottom
-  const handleChatScroll = () => {
-    if (!chatScrollRef.current) return
-    const { scrollTop, scrollHeight, clientHeight } = chatScrollRef.current
-    setShowScrollToBottom(scrollHeight - scrollTop - clientHeight > 80)
   }
 
   if (isLoading) {

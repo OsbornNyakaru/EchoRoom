@@ -46,19 +46,10 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
   const [message, setMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
-  const [showQuickActions, setShowQuickActions] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
-  const [showFormatting, setShowFormatting] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
   const [showMentions, setShowMentions] = useState(false)
-  const [cursorPosition, setCursorPosition] = useState(0)
-  const [isShiftPressed, setIsShiftPressed] = useState(false)
-  const [wordCount, setWordCount] = useState(0)
-  const [showPreview, setShowPreview] = useState(false)
-  const [draftSaved, setDraftSaved] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const [dragY, setDragY] = useState(0)
   const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
   const [touchStartY, setTouchStartY] = useState(0)
   const [swipeDirection, setSwipeDirection] = useState<"up" | "down" | null>(null)
@@ -67,10 +58,8 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const draftTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const recordButtonRef = useRef<HTMLButtonElement>(null)
 
   const getMoodColor = (mood: string) => {
     const colors = {
@@ -199,9 +188,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
       }
 
       // Reset states
-      setShowQuickActions(false)
-      setShowEmojiPicker(false)
-      setShowFormatting(false)
       setShowMentions(false)
       setIsExpanded(false)
     }
@@ -336,7 +322,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
       if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current)
       if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current)
-      if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current)
     }
   }, [])
 
@@ -621,6 +606,33 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
         )}
       </AnimatePresence>
 
+      {/* Mentions Dropdown */}
+      <AnimatePresence>
+        {showMentions && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full left-0 mb-2 bg-white/10 backdrop-blur-xl rounded-xl p-2 border border-white/20 min-w-[200px] z-50"
+          >
+            {mentionSuggestions.map((mention, index) => (
+              <motion.button
+                key={mention.name}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-white/10 transition-colors text-left"
+                onClick={() => insertText(`@${mention.name} `)}
+              >
+                <AtSign className="w-3 h-3 text-blue-400" />
+                <span className="text-sm text-white">{mention.name}</span>
+                <span className="text-xs text-gray-400 ml-auto">{mention.type}</span>
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Voice Recording Overlay - Mobile Optimized */}
       <AnimatePresence>
         {isRecording && (
@@ -722,7 +734,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
 
         {/* Voice Recording Button - Mobile Optimized */}
         <motion.button
-          ref={recordButtonRef}
           type="button"
           onTouchStart={handleRecordStart}
           onTouchEnd={handleRecordEnd}
