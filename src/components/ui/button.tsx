@@ -38,9 +38,9 @@ export interface ButtonProps
       glowColor?: string;
     }
 
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps & { asChild?: boolean }>(
   ({ className, variant, size, asChild = false, glowColor, ...props }, ref) => {
-    const Comp = asChild ? "span" : "button";
+    const Comp: React.ElementType = asChild ? "span" : "button";
     return (
       <Comp
         className={cn(
