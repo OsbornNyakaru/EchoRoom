@@ -14,8 +14,13 @@
     "@daily-co/daily-js": "^0.73.0",
     "@daily-co/daily-react": "^0.22.0",
     "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dialog": "^1.1.14",
     "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-scroll-area": "^1.2.9",
+    "@radix-ui/react-separator": "^1.1.7",
+    "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
+    "@radix-ui/react-tooltip": "^1.2.7",
     "@types/canvas-confetti": "^1.9.0",
     "@types/socket.io-client": "^1.4.36",
     "canvas-confetti": "^1.9.3",
@@ -29,7 +34,8 @@
     "react-router-dom": "^7.6.2",
     "rollup": "^4.36.0",
     "socket.io-client": "^4.8.1",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.3",
