@@ -1,6 +1,6 @@
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Smile, Paperclip, Mic, Plus, Image, Gift, Heart, Coffee, Star, Moon, Sun } from 'lucide-react';
+import { Send, Smile, Plus, Image, Gift, Heart, Coffee, Star, Moon, Sun } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '@/lib/utils';
 

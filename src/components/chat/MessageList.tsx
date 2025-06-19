@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday, differenceInMinutes } from 'date-fns';
-import { Bot, Crown, Sparkles, Heart, Coffee, Star, Moon, Sun, Smile, Clock } from 'lucide-react';
+import { Bot, Crown, Heart, Coffee, Star, Moon, Sun, Smile, Clock } from 'lucide-react';
 
 interface ChatMessage {
   id: string;

@@ -26,6 +26,20 @@
   }
 }
 
+@keyframes floating-particle {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  60% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1.2);
+    opacity: 0;
+  }
+}
+
 .animate-blob {
   animation: blob 7s infinite;
 }
@@ -40,4 +54,10 @@
 
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
+}
+
+.animate-floating-particle {
+  animation-name: floating-particle;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
 }

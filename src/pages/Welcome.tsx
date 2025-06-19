@@ -201,7 +201,8 @@ export default function Welcome() {
   const currentColor = moodColors[validatedMood as keyof typeof moodColors] || "#A3C4BC"
 
   return (
-    <div className="aurora-bg grid-pattern min-h-screen relative overflow-hidden">
+    <div className="aurora-bg grid-pattern min-h-screen relative">
+      {/* Floating particles background */}
       <FloatingParticles />
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 md:p-8">

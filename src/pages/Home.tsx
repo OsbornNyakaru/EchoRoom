@@ -79,6 +79,7 @@ export default function HomePage() {
 
   return (
     <div className="aurora-bg grid-pattern min-h-screen relative">
+      {/* Floating particles background */}
       <FloatingParticles />
 
       {/* Sound Toggle */}

@@ -196,7 +196,6 @@ const ChatWindow: React.FC = () => {
     );
   }
 
-  const activeParticipants = participants.filter(p => p.userId !== userId);
   const currentUser = participants.find(p => p.userId === userId);
 
   return (

@@ -6,9 +6,8 @@ interface MessageReactionsProps {
   onAddReaction: (emoji: string) => void;
 }
 
-const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions, onAddReaction }) => {
-  // Placeholder for reaction UI
-  const availableEmojis = ['👍', '❤️', '😂', '🔥', '🎉']; // Example emojis
+const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions }) => {
+
 
   return (
     <div className="flex gap-1 mt-1">
