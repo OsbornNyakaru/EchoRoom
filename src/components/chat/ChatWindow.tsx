@@ -24,10 +24,9 @@ import {
 } from "lucide-react"
 import { Button } from "../ui/button"
 import { cn } from "../../lib/utils"
-import MessageInput from './MessageInput'
 
 const ChatWindow: React.FC = () => {
-  const { messages, typingUsers, userId, participants, roomId, isConnected, sendMessage, startTyping, stopTyping } = useSocketContext()
+  const { messages, typingUsers, userId, participants, roomId, isConnected } = useSocketContext()
   const [isExpanded, setIsExpanded] = useState(false)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
@@ -455,17 +454,6 @@ const ChatWindow: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {roomId && (
-        <div className="border-t bg-white/10 p-2 sticky bottom-0 z-10">
-          <MessageInput
-            onSendMessage={sendMessage}
-            onTypingStart={startTyping}
-            onTypingStop={stopTyping}
-            currentUser={currentUser}
-          />
-        </div>
-      )}
     </motion.div>
   )
 }
