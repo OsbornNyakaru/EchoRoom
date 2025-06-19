@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
-import { Card } from './ui/card';
 import { 
   Bot, 
   Video, 
@@ -10,8 +9,7 @@ import {
   MicOff, 
   X, 
   Sparkles, 
-  Zap, 
-  Settings,
+  Zap,
   Maximize2,
   Minimize2,
   Volume2,
