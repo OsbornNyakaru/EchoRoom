@@ -65,7 +65,7 @@ export default function Welcome() {
 
     try {
       console.log('[Welcome.tsx] Fetching sessions to find matching room...');
-      const response = await fetch('${VITE_BACKEND_URL}/api/sessions');
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/sessions`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
