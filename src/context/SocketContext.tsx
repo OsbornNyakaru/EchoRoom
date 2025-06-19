@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import useSocket from '../hooks/useSocket';
 import type { Socket } from 'socket.io-client';
-import { Participant, RoomInfo, JoinRoomData, SessionPhase } from '../types/room';
+import { Participant, JoinRoomData } from '../types/room';
 import { ChatMessage, TypingUser } from '../types/chat';
 import socket from '../lib/socket';
 import { generateAnonymousUserName } from '../lib/utils';

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { Participant, RoomInfo, JoinRoomData, SessionPhase } from '../types/room';
+import { Participant, RoomInfo, SessionPhase } from '../types/room';
 
 type RoomState = {
   roomId: string | null;

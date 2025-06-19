@@ -1,4 +1,4 @@
-import { ChatMessage, TypingUser } from '../types/chat';
+import { TypingUser } from '../types/chat';
 
 export const formatMessageTimestamp = (timestamp: Date): string => {
   const date = new Date(timestamp);

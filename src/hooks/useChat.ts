@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-import { ChatMessage, TypingUser } from '../types/chat';
 import { useSocketContext } from '../context/SocketContext';
 
 const useChat = () => {

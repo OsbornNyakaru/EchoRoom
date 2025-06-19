@@ -23,7 +23,7 @@ export default function Welcome() {
   const location = useLocation()
   const searchParams = new URLSearchParams(location.search)
   const mood = searchParams.get("mood") || "calm"
-  const { joinRoom, userId, userName, setUserName, isConnected } = useSocketContext()
+  const { joinRoom, userId, setUserName, isConnected } = useSocketContext()
 
   const welcomeVideoRef = useRef<HTMLVideoElement>(null);
   const [isVideoFinished, setIsVideoFinished] = useState(false);

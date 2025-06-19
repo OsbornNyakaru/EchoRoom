@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Participant, RoomInfo, JoinRoomData, SessionPhase } from '../types/room';
 
 const useRoom = () => {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [sessionPhase, setSessionPhase] = useState<SessionPhase>('introduction');
+  const [timeRemaining] = useState<number>(0);
+  const [sessionPhase] = useState<SessionPhase>('introduction');
 
   const joinRoom = (roomData: JoinRoomData) => {
     console.log('Joining room:', roomData);

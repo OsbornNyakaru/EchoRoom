@@ -216,7 +216,7 @@ const ParticipantCard: React.FC<{ participant: any; isCurrentUser: boolean }> = 
 };
 
 const Room: React.FC = () => {
-  const { socket, isConnected, roomId, participants, joinRoom, leaveRoom, userId, userName } = useSocketContext();
+  const { isConnected, roomId, participants, joinRoom, leaveRoom, userId, userName } = useSocketContext();
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);

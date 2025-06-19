@@ -13,12 +13,6 @@ import SoundToggle from "../components/ui/SoundToggle"
 export default function HomePage() {
   const navigate = useNavigate()
   const [mood, setMood] = useState<string | null>(null)
-  const [logs, setLogs] = useState<string[]>([])
-
-  const debug = (msg: string) => {
-    const timestamp = new Date().toLocaleTimeString()
-    setLogs((prev) => [...prev.slice(-4), `${timestamp}: ${msg}`])
-  }
 
   const moodOptions = [
     {
@@ -72,7 +66,6 @@ export default function HomePage() {
   ]
 
   const handleMoodClick = (m: string) => {
-    debug(`Mood: ${m}`)
     setMood(m)
     navigate(`/welcome?mood=${encodeURIComponent(m.toLowerCase())}`)
   }

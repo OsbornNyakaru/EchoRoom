@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import socket from '../lib/socket'; // Import the shared socket instance
-import type { Socket } from 'socket.io-client'; // Import Socket type for clarity
 
 const useSocket = () => {
   const [isConnected, setIsConnected] = useState(false);
