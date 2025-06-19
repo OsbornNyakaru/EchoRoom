@@ -282,10 +282,7 @@ const Room: React.FC = () => {
     joinRoom,
     leaveRoom,
     userId,
-    userName,
-    sendMessage,
-    startTyping,
-    stopTyping,
+    userName
   } = useSocketContext()
   const location = useLocation()
   const navigate = useNavigate()
@@ -305,18 +302,10 @@ const Room: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isParticipantsSheetOpen, setIsParticipantsSheetOpen] = useState(false)
   const chatScrollRef = useRef<HTMLDivElement>(null)
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 
   const moodColor = getMoodColor(mood)
-  const moodGradient = getMoodGradient(mood)
   const MoodIcon = getMoodIcon(mood)
 
-  const currentUser = participants.find((p) => p.userId === userId) || {
-    userId,
-    userName,
-    mood,
-    avatar: "/avatars/default-avatar.png",
-  }
 
   // Update connection status based on socket state
   useEffect(() => {
@@ -411,13 +400,6 @@ const Room: React.FC = () => {
       chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight
     }
   }, [participants, currentView])
-
-  // Show scroll-to-bottom button if not at bottom
-  const handleChatScroll = () => {
-    if (!chatScrollRef.current) return
-    const { scrollTop, scrollHeight, clientHeight } = chatScrollRef.current
-    setShowScrollToBottom(scrollHeight - scrollTop - clientHeight > 80)
-  }
 
   if (isLoading) {
     return (
