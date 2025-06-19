@@ -234,7 +234,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   if (!isOpen) {
     return (
       <motion.div
-        className="absolute bottom-6 left-6 z-30"
+        className="absolute bottom-4 left-4 z-30 md:bottom-6 md:left-6"
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -282,7 +282,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
       <AnimatePresence>
         {isExpanded && (
           <motion.div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:absolute md:inset-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -294,16 +294,18 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
       <motion.div
         className={cn(
           'absolute z-50 glass-card rounded-2xl overflow-hidden shadow-2xl border border-white/20',
-          isExpanded 
-            ? 'inset-4' // Full overlay when expanded
-            : 'bottom-6 left-6 w-80 h-96' // Small card in bottom left
+          isExpanded
+            ? 'inset-0 md:inset-4 w-full h-full md:w-auto md:h-auto' // Overlay parent on mobile, inset on desktop
+            : 'bottom-4 left-4 w-72 h-80 md:bottom-6 md:left-6 md:w-80 md:h-96' // Small card in bottom left of container
         )}
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.4, type: "spring" }}
         style={{
           background: `linear-gradient(135deg, ${moodColor}10 0%, rgba(255, 255, 255, 0.08) 100%)`,
-          borderColor: moodColor + '30'
+          borderColor: moodColor + '30',
+          maxWidth: isExpanded ? '100%' : undefined,
+          maxHeight: isExpanded ? '100%' : undefined,
         }}
       >
         {/* Header */}

@@ -511,7 +511,14 @@ const Room: React.FC = () => {
                   </motion.div>
                 </div>
                 
-                <div className="flex-grow overflow-y-auto custom-scrollbar">
+                <div className="flex-grow overflow-y-auto custom-scrollbar relative">
+                  {/* Tavus Avatar Card always visible in participants section */}
+                  <TavusAvatarCard
+                    mood={mood}
+                    isOpen={isTavusOpen}
+                    onToggle={handleTavusToggle}
+                    onClose={handleTavusClose}
+                  />
                   {participants.length === 0 ? (
                     <motion.div 
                       className="flex flex-col items-center justify-center h-full text-center"
@@ -634,14 +641,6 @@ const Room: React.FC = () => {
           </div>
         </motion.div>
       </div>
-
-      {/* Tavus Avatar Card */}
-      <TavusAvatarCard
-        mood={mood}
-        isOpen={isTavusOpen}
-        onToggle={handleTavusToggle}
-        onClose={handleTavusClose}
-      />
     </div>
   );
 };
