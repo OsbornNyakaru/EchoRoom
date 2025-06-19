@@ -1,4 +1,4 @@
-import { ChatMessage, TypingUser, MessageReaction } from './chat';
+import { ChatMessage, MessageReaction } from './chat';
 import { Participant, RoomInfo, SessionPhase } from './room';
 
 export interface SocketEvents {
