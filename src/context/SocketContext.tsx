@@ -125,8 +125,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         };
 
         console.log('[SocketContext] Creating participant in database:', participantData);
-        
-        const response = await fetch(`${VITE_BACKEND_URL}/api/participants`, {
+
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const response = await fetch(`${backendUrl}/api/participants`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -167,7 +168,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (socket && roomId && isConnected) {
       try {
         // Update participant status in database
-        const response = await fetch(`${VITE_BACKEND_URL}/api/participants/${userId}/${roomId}`, {
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const response = await fetch(`${backendUrl}/api/participants/${userId}/${roomId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
