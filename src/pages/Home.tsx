@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Smile, Heart, Coffee, Star, Moon, Sun, Sparkles, Users, Clock } from "lucide-react"
+import { Smile, Heart, Coffee, Star, Moon, Sun, Sparkles, Users, Clock, Book } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import FloatingParticles from "../components/floating-particles"
@@ -56,6 +56,13 @@ export default function HomePage() {
       color: "text-yellow-300",
       bg: "from-yellow-300/20 to-[#FFE66D]/20",
       icon: <Smile className="h-10 w-10" />,
+    },
+    {
+      title: "Books",
+      desc: "Dive into stories and share your favorite reads.",
+      color: "text-indigo-400",
+      bg: "from-indigo-400/20 to-blue-400/20",
+      icon: <Book className="h-10 w-10" />,
     },
   ]
 

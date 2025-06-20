@@ -356,7 +356,6 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     const handleUserJoined = (data: any) => {
       console.log('[SocketContext] Received user-joined', data);
-      
       const newParticipant: Participant = {
         userId: data.user_id || data.id,
         userName: data.username || data.user_name || data.name,
@@ -365,25 +364,37 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isSpeaking: data.is_speaking || false,
         isMuted: data.is_muted || false,
       };
-      
       setParticipants(prev => {
         const exists = prev.some(p => p.userId === newParticipant.userId);
         if (exists) return prev;
         return [...prev, newParticipant];
       });
+      // Add a system message for join
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `system-join-${newParticipant.userId}-${Date.now()}`,
+          userId: 'system',
+          userName: 'System',
+          avatar: '/avatars/default-avatar.png',
+          content: `${newParticipant.userName} has joined the room.`,
+          type: 'system',
+          timestamp: new Date(),
+          reactions: []
+        }
+      ]);
     };
 
     const handleUserLeft = (data: any) => {
       console.log('[SocketContext] Received user-left', data);
       const userIdToRemove = data.user_id || data.id;
-      // Find the participant's name before removing
+      // Get the user's name before removing
       let leftUserName = '';
       setParticipants(prev => {
         const leaving = prev.find(p => p.userId === userIdToRemove);
         leftUserName = leaving?.userName || `User ${userIdToRemove?.substring(0, 5)}`;
         return prev.filter(p => p.userId !== userIdToRemove);
       });
-      // Add a system message to the chat
       setMessages(prev => [
         ...prev,
         {

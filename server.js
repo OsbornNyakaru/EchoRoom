@@ -113,7 +113,7 @@ io.on('connection', (socket) => {
       }
 
       // Notify others in the room
-      socket.to(session_id).emit('user-left', { user_id });
+      io.to(session_id).emit('user-left', { user_id });
 
     } catch (error) {
       console.error('Error in leaveRoom:', error);

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { format, isToday, isYesterday, differenceInMinutes } from 'date-fns';
-import { Bot, Crown, Heart, Coffee, Star, Moon, Sun, Smile, Clock } from 'lucide-react';
+import { Bot, Crown, Heart, Coffee, Star, Moon, Sun, Smile, Clock, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -82,20 +82,35 @@ const MessageBubble: React.FC<{
   showAvatar: boolean;
 }> = ({ message, isCurrentUser, isConsecutive, participant, showAvatar }) => {
   const isSystemMessage = message.type === 'system' || message.type === 'ai-prompt';
+  const isJoin = isSystemMessage && message.content?.includes('joined the room');
+  const isLeave = isSystemMessage && message.content?.includes('left the room');
+  const isJoinLeave = isJoin || isLeave;
   const moodColor = participant ? getMoodColor(participant.mood) : '#A3C4BC';
   const MoodIcon = participant ? getMoodIcon(participant.mood) : Coffee;
   
   if (isSystemMessage) {
     return (
       <motion.div
-        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="flex justify-center my-6"
+        initial={isJoinLeave ? { opacity: 0, y: 8, scale: 0.9 } : { opacity: 0, y: 10, scale: 0.95 }}
+        animate={isJoinLeave ? { opacity: 1, y: 0, scale: 1 } : { opacity: 1, y: 0, scale: 1 }}
+        exit={isJoinLeave ? { opacity: 0, y: 8, scale: 0.9 } : { opacity: 0, y: 10, scale: 0.95 }}
+        transition={isJoinLeave ? { type: 'tween', duration: 0.35, ease: 'easeOut' } : { type: 'spring', stiffness: 300, damping: 30 }}
+        className="flex justify-center my-2"
       >
-        <div className="glass-card px-6 py-3 rounded-full max-w-md border border-white/20">
-          <div className="flex items-center gap-2">
+        <div
+          className={
+            isJoin
+              ? 'glass-card px-3 py-1 rounded-full max-w-xs border border-blue-400/40 bg-blue-500/10 flex items-center gap-1 shadow-sm'
+              : isLeave
+                ? 'glass-card px-3 py-1 rounded-full max-w-xs border border-red-400/40 bg-red-500/10 flex items-center gap-1 shadow-sm'
+                : 'glass-card px-6 py-3 rounded-full max-w-md border border-white/20'
+          }
+        >
+          <div className="flex items-center gap-1">
+            {isJoin && <ArrowRight className="h-3 w-3 text-blue-400" />}
+            {isLeave && <ArrowLeft className="h-3 w-3 text-red-400" />}
             {message.type === 'ai-prompt' && <Bot className="h-4 w-4 text-blue-400" />}
-            <p className="text-sm text-center text-gray-300">{message.content}</p>
+            <p className={isJoinLeave ? 'text-[0.65rem] font-semibold text-blue-300' + (isLeave ? ' text-red-300' : '') : 'text-sm text-center text-gray-300'}>{message.content}</p>
           </div>
         </div>
       </motion.div>
