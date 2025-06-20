@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { User, Shuffle, Check, X } from 'lucide-react';
+import { User, Shuffle } from 'lucide-react';
 import { generateAnonymousUserName } from '../lib/utils';
 import { cn } from '@/lib/utils';
 
