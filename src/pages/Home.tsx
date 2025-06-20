@@ -116,18 +116,18 @@ export default function HomePage() {
               <Button
                 key={item.title}
                 variant="outline"
-                className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"}`}
+                className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
                 onClick={() => handleMoodClick(item.title)}
               >
                 <div className={`${item.color}`}>{item.icon}</div>
-                <div className="text-white text-lg font-semibold">{item.title}</div>
-                <p className="text-sm text-[#D8E2DC] text-center max-w-[200px]">{item.desc}</p>
+                <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
+                <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
               </Button>
             ))}
           </div>
         </Card>
       </div>
-      <ElevenLabsConvoAIWidget agentId="agent_01jxcd8ch5fzd801q9k9g6q8b3" />
+      <ElevenLabsConvoAIWidget agentId="agent_01jx8ahxfveh2r99gz4x07hd0w" />
     </div>
   )
 }

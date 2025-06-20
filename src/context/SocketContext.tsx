@@ -376,7 +376,27 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     const handleUserLeft = (data: any) => {
       console.log('[SocketContext] Received user-left', data);
       const userIdToRemove = data.user_id || data.id;
-      setParticipants(prev => prev.filter(p => p.userId !== userIdToRemove));
+      // Find the participant's name before removing
+      let leftUserName = '';
+      setParticipants(prev => {
+        const leaving = prev.find(p => p.userId === userIdToRemove);
+        leftUserName = leaving?.userName || `User ${userIdToRemove?.substring(0, 5)}`;
+        return prev.filter(p => p.userId !== userIdToRemove);
+      });
+      // Add a system message to the chat
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `system-leave-${userIdToRemove}-${Date.now()}`,
+          userId: 'system',
+          userName: 'System',
+          avatar: '/avatars/default-avatar.png',
+          content: `${leftUserName} has left the room.`,
+          type: 'system',
+          timestamp: new Date(),
+          reactions: []
+        }
+      ]);
     };
 
     const handleTypingStart = (data: any) => {

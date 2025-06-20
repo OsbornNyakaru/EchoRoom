@@ -390,7 +390,12 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
   return (
     <motion.div
       ref={containerRef}
-      className={cn("relative transition-all duration-300", isKeyboardVisible && "pb-safe-area-inset-bottom")}
+      className={cn(
+        "relative transition-all duration-300",
+        // Better mobile spacing and safe area handling
+        isKeyboardVisible && "pb-safe-area-inset-bottom",
+        "px-1 lg:px-0", // Add horizontal padding on mobile
+      )}
       animate={{
         height: isExpanded ? "auto" : "auto",
         paddingBottom: isKeyboardVisible ? "env(safe-area-inset-bottom)" : "0",
@@ -583,7 +588,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex gap-2 mb-3 overflow-x-auto pb-2 scrollbar-none"
+            className="flex gap-1.5 lg:gap-2 mb-3 overflow-x-auto pb-2 scrollbar-none px-1 lg:px-0"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {quickReplies.map((reply, index) => (
@@ -593,7 +598,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.05 }}
                 whileTap={{ scale: 0.9 }}
-                className="flex-shrink-0 w-12 h-12 rounded-full bg-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center text-lg hover:bg-white/10 transition-colors"
+                className="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center text-base lg:text-lg hover:bg-white/10 transition-colors"
                 onClick={() => {
                   onSendMessage(reply.emoji)
                   triggerHaptic("light")
@@ -660,7 +665,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
 
       {/* Main Input Form - Mobile Optimized */}
       <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        {/* Expand/Collapse Button */}
+        {/* Expand/Collapse Button - Smaller on mobile */}
         <Button
           type="button"
           variant="outline"
@@ -669,16 +674,16 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
             setIsExpanded(!isExpanded)
             triggerHaptic("light")
           }}
-          className="bg-white/5 backdrop-blur-sm border-white/20 text-white hover:bg-white/10 p-3 rounded-full transition-all duration-200 flex-shrink-0"
+          className="bg-white/5 backdrop-blur-sm border-white/20 text-white hover:bg-white/10 rounded-full transition-all duration-200 flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center"
         >
           <motion.div animate={{ rotate: isExpanded ? 45 : 0 }} transition={{ duration: 0.2 }}>
-            <Plus className="h-5 w-5" />
+            <Plus className="h-4 w-4 lg:h-5 lg:w-5" />
           </motion.div>
         </Button>
 
-        {/* Text Input - Mobile Optimized */}
+        {/* Text Input Container - Optimized for mobile */}
         <div
-          className="flex-1 relative"
+          className="flex-1 relative min-w-0"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -692,10 +697,12 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
             onBlur={handleBlur}
             placeholder="Type a message..."
             className={cn(
-              "w-full p-4 pr-16 rounded-2xl resize-none transition-all duration-200",
+              "w-full pr-12 lg:pr-16 rounded-2xl resize-none transition-all duration-200",
               "bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400",
               "focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20",
-              "min-h-[56px] max-h-[120px] text-base", // Larger text for mobile
+              "min-h-[48px] lg:min-h-[56px] max-h-[120px]",
+              // Mobile-specific padding and text size
+              "px-3 py-3 lg:px-4 lg:py-4 text-base lg:text-base",
               isFocused && "border-blue-400/50 ring-2 ring-blue-400/20",
             )}
             rows={1}
@@ -705,14 +712,14 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
             spellCheck="true"
           />
 
-          {/* Mobile Input Indicators */}
+          {/* Mobile Input Indicators - Repositioned */}
           <div className="absolute bottom-2 right-2 flex items-center gap-1">
             {message.length > 400 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 className={cn(
-                  "text-xs px-2 py-1 rounded-full",
+                  "text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full",
                   message.length > 450 ? "bg-red-500/20 text-red-400" : "bg-yellow-500/20 text-yellow-400",
                 )}
               >
@@ -724,54 +731,59 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-xs text-gray-400 bg-white/5 px-2 py-1 rounded-full flex items-center gap-1"
+                className="text-xs text-gray-400 bg-white/5 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full flex items-center gap-1"
               >
-                <Keyboard className="w-2.5 h-2.5" />
+                <Keyboard className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
               </motion.div>
             )}
           </div>
         </div>
 
-        {/* Voice Recording Button - Mobile Optimized */}
-        <motion.button
-          type="button"
-          onTouchStart={handleRecordStart}
-          onTouchEnd={handleRecordEnd}
-          onMouseDown={handleRecordStart}
-          onMouseUp={handleRecordEnd}
-          onMouseLeave={handleRecordEnd}
-          className={cn(
-            "p-3 rounded-full transition-all duration-200 flex-shrink-0 min-w-[48px] h-12",
-            "bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10",
-            isRecording && "bg-red-500/20 border-red-400/50 text-red-400 scale-110",
-          )}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isRecording ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-        </motion.button>
+        {/* Action Buttons Container - Optimized spacing */}
+        <div className="flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
+          {/* Voice Recording Button - Compact on mobile */}
+          <motion.button
+            type="button"
+            onTouchStart={handleRecordStart}
+            onTouchEnd={handleRecordEnd}
+            onMouseDown={handleRecordStart}
+            onMouseUp={handleRecordEnd}
+            onMouseLeave={handleRecordEnd}
+            className={cn(
+              "rounded-full transition-all duration-200 flex-shrink-0 flex items-center justify-center",
+              "bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10",
+              "w-10 h-10 lg:w-12 lg:h-12", // Smaller on mobile
+              isRecording && "bg-red-500/20 border-red-400/50 text-red-400 scale-110",
+            )}
+            whileTap={{ scale: 0.95 }}
+          >
+            {isRecording ? <MicOff className="h-4 w-4 lg:h-5 lg:w-5" /> : <Mic className="h-4 w-4 lg:h-5 lg:w-5" />}
+          </motion.button>
 
-        {/* Send Button - Mobile Optimized */}
-        <motion.button
-          type="submit"
-          disabled={!message.trim()}
-          className={cn(
-            "p-3 rounded-full transition-all duration-200 relative overflow-hidden flex-shrink-0 min-w-[48px] h-12",
-            message.trim()
-              ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg"
-              : "bg-white/5 backdrop-blur-sm border border-white/20 text-gray-400 cursor-not-allowed",
-          )}
-          whileTap={message.trim() ? { scale: 0.95 } : {}}
-          onClick={() => message.trim() && triggerHaptic("medium")}
-        >
-          {message.trim() && (
-            <motion.div
-              className="absolute inset-0 bg-white/20 rounded-full scale-0"
-              animate={{ scale: [0, 1, 0] }}
-              transition={{ duration: 0.6, repeat: Number.POSITIVE_INFINITY }}
-            />
-          )}
-          <ArrowUp className="h-5 w-5 relative z-10" />
-        </motion.button>
+          {/* Send Button - Compact on mobile */}
+          <motion.button
+            type="submit"
+            disabled={!message.trim()}
+            className={cn(
+              "rounded-full transition-all duration-200 relative overflow-hidden flex-shrink-0 flex items-center justify-center",
+              "w-10 h-10 lg:w-12 lg:h-12", // Smaller on mobile
+              message.trim()
+                ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg"
+                : "bg-white/5 backdrop-blur-sm border border-white/20 text-gray-400 cursor-not-allowed",
+            )}
+            whileTap={message.trim() ? { scale: 0.95 } : {}}
+            onClick={() => message.trim() && triggerHaptic("medium")}
+          >
+            {message.trim() && (
+              <motion.div
+                className="absolute inset-0 bg-white/20 rounded-full scale-0"
+                animate={{ scale: [0, 1, 0] }}
+                transition={{ duration: 0.6, repeat: Number.POSITIVE_INFINITY }}
+              />
+            )}
+            <ArrowUp className="h-4 w-4 lg:h-5 lg:w-5 relative z-10" />
+          </motion.button>
+        </div>
       </form>
 
       {/* Mobile Keyboard Shortcuts Help */}

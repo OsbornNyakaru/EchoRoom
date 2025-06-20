@@ -760,9 +760,9 @@ const Room: React.FC = () => {
                 <ChatWindow />
               </div>
 
-              {/* Message Input - Fixed at bottom */}
+              {/* Message Input - Fixed at bottom with better mobile spacing */}
               <div className="p-2 lg:p-4 border-t border-white/10 bg-black/20 backdrop-blur-xl">
-                <div className="max-w-4xl mx-auto">
+                <div className="max-w-4xl mx-auto px-2 lg:px-0">
                   <MessageInput
                     onSendMessage={sendMessage}
                     onTypingStart={startTyping}
@@ -873,24 +873,24 @@ const Room: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Mobile Voice Controls */}
+        {/* Mobile Voice Controls - Better spacing */}
         <motion.div
-          className="lg:hidden p-2 border-t border-white/10 bg-black/20 backdrop-blur-xl"
+          className="lg:hidden p-3 lg:p-2 border-t border-white/10 bg-black/20 backdrop-blur-xl"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-3 max-w-sm mx-auto">
             <Button
               onClick={() => setIsMuted(!isMuted)}
               variant="outline"
               size="lg"
               className={cn(
-                "flex-1 max-w-[120px] bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-10",
+                "flex-1 bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-12",
                 isMuted && "bg-red-500/20 border-red-400/50 text-red-400",
               )}
             >
-              <div className="flex flex-col items-center gap-0.5">
+              <div className="flex flex-col items-center gap-1">
                 {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 <span className="text-xs font-medium">{isMuted ? "Unmute" : "Mute"}</span>
               </div>
@@ -900,11 +900,11 @@ const Room: React.FC = () => {
               variant="outline"
               size="lg"
               className={cn(
-                "flex-1 max-w-[120px] bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-10",
+                "flex-1 bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-12",
                 isDeafened && "bg-red-500/20 border-red-400/50 text-red-400",
               )}
             >
-              <div className="flex flex-col items-center gap-0.5">
+              <div className="flex flex-col items-center gap-1">
                 {isDeafened ? <VolumeX className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
                 <span className="text-xs font-medium">{isDeafened ? "Listen" : "Deafen"}</span>
               </div>

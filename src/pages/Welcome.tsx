@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2 } from "lucide-react"
+import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2 } from 'lucide-react'
 import FloatingParticles from "../components/floating-particles"
 import UserNameModal from "../components/UserNameModal"
 import { useSocketContext } from "../context/SocketContext"
@@ -202,6 +202,12 @@ export default function Welcome() {
 
   return (
     <div className="aurora-bg grid-pattern min-h-screen relative">
+      <style>
+        {`@keyframes shimmer {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(100%); }
+        }`}
+      </style>
       {/* Floating particles background */}
       <FloatingParticles />
 
@@ -320,31 +326,37 @@ export default function Welcome() {
                 </motion.div>
 
                 {/* Audio controls */}
-                <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3">
+                <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 flex gap-4">
                   <Button
                     variant="outline"
                     size="sm"
-                    className="glass-card rounded-full w-10 h-10 p-0"
+                    className="glass-card rounded-full w-12 h-12 p-0 border-2 border-white/20 backdrop-blur-md bg-white/10 hover:bg-white/20 hover:border-white/30 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                     onClick={() => setIsAudioEnabled(!isAudioEnabled)}
                     disabled={isJoiningRoom}
+                    style={{
+                      boxShadow: `0 4px 20px ${currentColor}30`,
+                    }}
                   >
                     {isAudioEnabled ? (
-                      <Volume2 className="h-4 w-4 text-[#A3C4BC]" />
+                      <Volume2 className="h-5 w-5 text-white drop-shadow-sm" />
                     ) : (
-                      <VolumeX className="h-4 w-4 text-[#8E9AAF]" />
+                      <VolumeX className="h-5 w-5 text-white/60 drop-shadow-sm" />
                     )}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
-                    className="glass-card rounded-full w-10 h-10 p-0"
+                    className="glass-card rounded-full w-12 h-12 p-0 border-2 border-white/20 backdrop-blur-md bg-white/10 hover:bg-white/20 hover:border-white/30 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                     onClick={() => setIsMicEnabled(!isMicEnabled)}
                     disabled={isJoiningRoom}
+                    style={{
+                      boxShadow: `0 4px 20px ${currentColor}30`,
+                    }}
                   >
                     {isMicEnabled ? (
-                      <Mic className="h-4 w-4 text-[#A3C4BC]" />
+                      <Mic className="h-5 w-5 text-white drop-shadow-sm" />
                     ) : (
-                      <MicOff className="h-4 w-4 text-[#8E9AAF]" />
+                      <MicOff className="h-5 w-5 text-white/60 drop-shadow-sm" />
                     )}
                   </Button>
                 </div>
@@ -364,20 +376,36 @@ export default function Welcome() {
                     <Button
                       variant="glow"
                       size="lg"
-                      className="px-10 py-5 rounded-full text-base font-semibold shadow-xl transition-all duration-300"
+                      className="flex items-center justify-center mx-auto w-full max-w-xs md:max-w-md px-6 py-4 md:px-10 md:py-6 rounded-2xl text-base md:text-lg font-semibold shadow-2xl transition-all duration-500 border-0 text-white relative overflow-hidden group hover:scale-105 hover:shadow-3xl disabled:hover:scale-100 disabled:opacity-70"
+                      style={{
+                        background: `linear-gradient(135deg, ${currentColor}90 0%, ${currentColor}70 50%, ${currentColor}90 100%)`,
+                        boxShadow: `0 8px 32px ${currentColor}40, 0 0 0 1px ${currentColor}30`,
+                      }}
                       onClick={handleJoinRoom}
                       disabled={!isReady || isJoiningRoom || !isConnected}
                     >
+                      {/* Animated background overlay */}
+                      <div 
+                        className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
+                        style={{
+                          background: `linear-gradient(45deg, transparent 30%, ${currentColor} 50%, transparent 70%)`,
+                          transform: 'translateX(-100%)',
+                          animation: 'shimmer 2s infinite',
+                        }}
+                      />
+                      
                       {isJoiningRoom ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Joining Room...
+                          <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                          <span className="font-medium">Joining Room...</span>
                         </>
                       ) : (
-                        <>
-                          Enter Your {validatedMood.charAt(0).toUpperCase() + validatedMood.slice(1)} Room
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
+                        <span className="flex items-center justify-center gap-2 w-full relative z-10">
+                          <span className="font-medium block text-center w-full">
+                            Enter Your {validatedMood.charAt(0).toUpperCase() + validatedMood.slice(1)} Room
+                          </span>
+                          <ArrowRight className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+                        </span>
                       )}
                     </Button>
                   </motion.div>

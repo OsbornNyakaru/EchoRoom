@@ -161,22 +161,20 @@ const UserNameModal: React.FC<UserNameModalProps> = ({ isOpen, onConfirm, onCanc
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 mt-6">
-              <Button
-                onClick={onCancel}
-                variant="outline"
-                className="flex-1 glass-card border-red-400/30 text-red-400 hover:bg-red-400/10"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-3 mt-8 w-full">
               <Button
                 onClick={handleConfirm}
                 disabled={!userName.trim()}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+                className="flex-1 flex items-center justify-center rounded-full py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base font-semibold shadow-lg transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <Check className="w-4 h-4 mr-2" />
                 Join Room
+              </Button>
+              <Button
+                onClick={onCancel}
+                variant="outline"
+                className="flex-1 flex items-center justify-center rounded-full py-3 glass-card border-red-400/30 text-red-400 hover:bg-red-400/10 text-base font-semibold transition-all duration-200"
+              >
+                Cancel
               </Button>
             </div>
           </Card>
