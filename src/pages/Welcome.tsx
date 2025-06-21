@@ -32,7 +32,7 @@ export default function Welcome() {
   const [selectedSession, setSelectedSession] = useState<ChatSession | null>(null);
   const [hasPlayedBeep, setHasPlayedBeep] = useState(false);
 
-  const validMoods = ["hopeful", "lonely", "motivated", "calm", "loving", "joyful"]
+  const validMoods = ["hopeful", "lonely", "motivated", "calm", "loving", "joyful", "books"]
   const validatedMood = validMoods.includes(mood) ? mood : "calm"
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(true)

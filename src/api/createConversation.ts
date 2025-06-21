@@ -16,7 +16,6 @@ export const createConversation = async (
 
   if (!response.ok) {
     throw new Error(`Failed to create conversation: ${response.statusText}`);
-    console.log(response)
   }
 
   return response.json();

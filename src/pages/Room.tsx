@@ -31,10 +31,11 @@ import {
   Bot,
   Settings,
   MoreVertical,
+  Book,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
-import { playZoom } from "../lib/soundUtils"
+import { playZoom } from "@/lib/soundUtils"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
@@ -96,6 +97,7 @@ const getMoodIcon = (mood: string) => {
     calm: Coffee,
     loving: Heart,
     joyful: Sparkles,
+    books: Book
   }
   return icons[mood?.toLowerCase() as keyof typeof icons] || Coffee
 }
@@ -108,6 +110,8 @@ const getMoodColor = (mood: string) => {
     calm: "#10b981",
     loving: "#ec4899",
     joyful: "#8b5cf6",
+    books: "#ef4444",
+
   }
   return colors[mood?.toLowerCase() as keyof typeof colors] || "#10b981"
 }
@@ -120,6 +124,8 @@ const getMoodGradient = (mood: string) => {
     calm: "from-emerald-500/20 to-teal-500/20",
     loving: "from-pink-500/20 to-rose-500/20",
     joyful: "from-violet-500/20 to-purple-500/20",
+    books: "from-violet-500/20 to-purple-500/20",
+
   }
   return gradients[mood?.toLowerCase() as keyof typeof gradients] || gradients.calm
 }
@@ -353,6 +359,8 @@ const Room: React.FC = () => {
       return () => clearInterval(timer)
     }
   }, [roomId])
+
+const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
 
   // Auto-join room based on mood
   useEffect(() => {
@@ -646,7 +654,7 @@ const Room: React.FC = () => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <TavusAvatarCard
-                  mood={mood}
+                  personaId={personaId}
                   isOpen={isTavusOpen}
                   onToggle={handleTavusToggle}
                   onClose={handleTavusClose}
@@ -799,7 +807,7 @@ const Room: React.FC = () => {
 
               <ScrollArea className="flex-1 p-3">
                 <TavusAvatarCard
-                  mood={mood}
+                  personaId={personaId}
                   isOpen={isTavusOpen}
                   onToggle={handleTavusToggle}
                   onClose={handleTavusClose}

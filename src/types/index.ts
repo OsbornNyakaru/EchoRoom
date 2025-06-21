@@ -1,7 +1,7 @@
 export enum ConversationStatus {
-  ACTIVE = "active",
-  ENDED = "ended",
-  ERROR = "error",
+  ACTIVE = 'active',
+  ENDED = 'ended',
+  ERROR = 'error',
 }
 
 export type IConversation = {
@@ -13,5 +13,3 @@ export type IConversation = {
   persona_id: string | null;
   created_at: string;
 };
-
-
