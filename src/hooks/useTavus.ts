@@ -13,7 +13,7 @@ export function useTavusAvatar(personaId: string) {
         setAvatarUrl(url);
         setError(null);
       })
-      .catch(err => {
+      .catch(() => {
         setError("Failed to load Tavus avatar.");
         setAvatarUrl(null);
       })

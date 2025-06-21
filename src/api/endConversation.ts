@@ -1,4 +1,4 @@
-import { TAVUS_API_KEY } from '@/config/tavus';
+import TAVUS_API_KEY from '@/config/tavus';
 
 export const endConversation = async (conversationId: string) => {
   try {
@@ -7,7 +7,7 @@ export const endConversation = async (conversationId: string) => {
       {
         method: 'POST',
         headers: {
-          'x-api-key': TAVUS_API_KEY,
+          'x-api-key': TAVUS_API_KEY.API_KEY,
         },
       }
     );
