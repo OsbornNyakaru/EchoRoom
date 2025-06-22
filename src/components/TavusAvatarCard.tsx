@@ -401,7 +401,7 @@ const MobileContent: React.FC<{
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
+}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall }) => {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
       <AnimatePresence mode="wait">
@@ -533,7 +533,7 @@ const DesktopContent: React.FC<{
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
+}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall }) => {
   return (
     <div className="flex-1 flex items-center justify-center p-8 relative">
       <AnimatePresence mode="wait">
