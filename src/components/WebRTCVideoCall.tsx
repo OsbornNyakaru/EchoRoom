@@ -5,12 +5,17 @@ import {
   VideoOff, 
   Mic, 
   MicOff, 
+  Phone, 
   PhoneOff,
+  Settings,
   Maximize2,
   Minimize2,
   Volume2,
   VolumeX,
-  ExternalLink
+  ExternalLink,
+  ArrowLeft,
+  Home,
+  RotateCcw
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useWebRTC } from '../hooks/useWebRTC';
@@ -38,8 +43,9 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false); // Changed to false by default
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [showNavigationHelp, setShowNavigationHelp] = useState(false);
 
   const {
     isConnected,
@@ -117,6 +123,19 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
     };
   }, [showControls, isConnected, showCustomControls]);
 
+  // Show navigation help after a delay when connected
+  useEffect(() => {
+    if (isConnected && !showCustomControls) {
+      const timer = setTimeout(() => {
+        setShowNavigationHelp(true);
+        // Auto-hide after 5 seconds
+        setTimeout(() => setShowNavigationHelp(false), 5000);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, showCustomControls]);
+
   // Handle mute toggle
   const handleMuteToggle = () => {
     const muted = toggleMute();
@@ -135,6 +154,17 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
     cleanup();
     setHasInitialized(false);
     onCallEnd();
+  };
+
+  // Handle restart call
+  const handleRestartCall = () => {
+    console.log('🔄 Restarting call...');
+    cleanup();
+    setHasInitialized(false);
+    // Small delay to ensure cleanup is complete
+    setTimeout(() => {
+      initializeWebRTC();
+    }, 1000);
   };
 
   // Open conversation in new tab
@@ -191,12 +221,10 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                   <p className="text-white/70 mb-4">{error}</p>
                   <div className="flex gap-3 justify-center">
                     <Button
-                      onClick={() => {
-                        setHasInitialized(false);
-                        initializeWebRTC();
-                      }}
+                      onClick={handleRestartCall}
                       className="bg-emerald-500 hover:bg-emerald-600"
                     >
+                      <RotateCcw className="w-4 h-4 mr-2" />
                       Try Again
                     </Button>
                     <Button
@@ -204,7 +232,8 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                       variant="outline"
                       className="border-white/20 text-white hover:bg-white/10"
                     >
-                      Cancel
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      Go Back
                     </Button>
                   </div>
                 </>
@@ -213,6 +242,64 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Navigation Help Overlay - Shows users how to exit */}
+      <AnimatePresence>
+        {showNavigationHelp && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30 bg-black/80 backdrop-blur-md rounded-2xl p-6 text-white text-center max-w-sm mx-4"
+          >
+            <div className="mb-4">
+              <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Home className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2">Need to Exit?</h3>
+              <p className="text-white/80 text-sm">
+                Use the buttons below to navigate back or restart your conversation
+              </p>
+            </div>
+            
+            <div className="flex gap-3 justify-center">
+              <Button
+                onClick={handleCallEnd}
+                variant="outline"
+                size="sm"
+                className="border-white/20 text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Exit Call
+              </Button>
+              <Button
+                onClick={() => setShowNavigationHelp(false)}
+                size="sm"
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                Got it
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Always-visible Exit Button (top-left corner) */}
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="absolute top-4 left-4 z-20"
+      >
+        <Button
+          onClick={handleCallEnd}
+          variant="outline"
+          size="sm"
+          className="bg-black/50 border-white/20 text-white hover:bg-black/70 backdrop-blur-sm"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Exit Call
+        </Button>
+      </motion.div>
 
       {/* Tavus CVI Iframe or Instructions */}
       <div className="absolute inset-0">
@@ -228,37 +315,44 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                 title="Tavus CVI Conversation"
               />
               
-              {/* Minimal overlay message */}
-              <div className="absolute top-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white text-sm">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                    <span>Tavus CVI Active</span>
-                    <span className="text-xs text-white/60 ml-2">({replicaId})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      onClick={openConversationInNewTab}
-                      size="sm"
-                      variant="outline"
-                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-6 px-2"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      New Tab
-                    </Button>
-                    {/* Simple end call button - always visible */}
-                    <Button
-                      onClick={handleCallEnd}
-                      size="sm"
-                      variant="destructive"
-                      className="bg-red-500 hover:bg-red-600 text-white text-xs h-6 px-2"
-                    >
-                      <PhoneOff className="w-3 h-3 mr-1" />
-                      End
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              {/* Minimal overlay message - Hidden by default, shows on interaction */}
+              <AnimatePresence>
+                {showControls && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="absolute top-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white text-sm z-10"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        <span>Tavus CVI Active</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          onClick={openConversationInNewTab}
+                          size="sm"
+                          variant="outline"
+                          className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-6 px-2"
+                        >
+                          <ExternalLink className="w-3 h-3 mr-1" />
+                          New Tab
+                        </Button>
+                        <Button
+                          onClick={handleRestartCall}
+                          size="sm"
+                          variant="outline"
+                          className="bg-blue-500/20 border-blue-400/30 text-blue-400 hover:bg-blue-500/30 text-xs h-6 px-2"
+                        >
+                          <RotateCcw className="w-3 h-3 mr-1" />
+                          Restart
+                        </Button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         ) : (
@@ -309,7 +403,7 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2 text-white z-10"
+            className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2 text-white z-10"
           >
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
@@ -396,6 +490,16 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                 </Button>
               )}
 
+              {/* Restart Button */}
+              <Button
+                onClick={handleRestartCall}
+                size="lg"
+                variant="outline"
+                className="w-12 h-12 rounded-full bg-blue-500/20 border-blue-400/30 text-blue-400 hover:bg-blue-500/30"
+              >
+                <RotateCcw className="w-5 h-5" />
+              </Button>
+
               {/* End Call Button */}
               <Button
                 onClick={handleCallEnd}
@@ -432,6 +536,56 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
           <div className="font-mono">ID: {conversationId.slice(-8)}</div>
         </div>
       )}
+
+      {/* Bottom Navigation Bar - Always visible for easy access */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="absolute bottom-4 left-4 right-4 z-20"
+      >
+        <div className="flex items-center justify-between bg-black/50 backdrop-blur-md rounded-xl p-3 border border-white/10">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-white text-sm font-medium">Live Conversation</span>
+            {conversationId && (
+              <span className="text-white/60 text-xs font-mono">
+                #{conversationId.slice(-6)}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {conversationUrl && (
+              <Button
+                onClick={openConversationInNewTab}
+                size="sm"
+                variant="outline"
+                className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-7 px-3"
+              >
+                <ExternalLink className="w-3 h-3 mr-1" />
+                Open in Tab
+              </Button>
+            )}
+            <Button
+              onClick={handleRestartCall}
+              size="sm"
+              variant="outline"
+              className="bg-blue-500/20 border-blue-400/30 text-blue-400 hover:bg-blue-500/30 text-xs h-7 px-3"
+            >
+              <RotateCcw className="w-3 h-3 mr-1" />
+              Restart
+            </Button>
+            <Button
+              onClick={() => setShowNavigationHelp(true)}
+              size="sm"
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-7 px-3"
+            >
+              Help
+            </Button>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
