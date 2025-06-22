@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "./ui/button"
-import { Bot, X, Loader2, AlertCircle, Maximize2, Minimize2, Phone, Video, Play, Sparkles } from "lucide-react"
+import { Bot, X, Loader2, AlertCircle, Maximize2, Minimize2, Phone, Video } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -399,7 +399,7 @@ const MobileContent: React.FC<{
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
+}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall }) => {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
       <AnimatePresence mode="wait">
