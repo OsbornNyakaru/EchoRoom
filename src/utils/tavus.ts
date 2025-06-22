@@ -5,6 +5,8 @@ export interface TavusAvatarUrlResponse {
   avatarUrl?: string;
   url?: string;
   error?: string;
+  isDemo?: boolean;
+  isStaticImage?: boolean;
 }
 
 export interface TavusConversationResponse {
@@ -20,7 +22,11 @@ export interface TavusConversationResponse {
 /**
  * Fetches the Tavus avatar URL for a given personaId via backend proxy.
  */
-export async function fetchTavusAvatarUrl(personaId: string): Promise<string> {
+export async function fetchTavusAvatarUrl(personaId: string): Promise<{
+  url: string;
+  isDemo: boolean;
+  isStaticImage: boolean;
+}> {
   if (!personaId) {
     throw new Error("No personaId provided to fetch Tavus avatar.");
   }
@@ -45,7 +51,11 @@ export async function fetchTavusAvatarUrl(personaId: string): Promise<string> {
       throw new Error('Invalid response from backend: avatar URL missing');
     }
 
-    return avatarUrl;
+    return {
+      url: avatarUrl,
+      isDemo: data.isDemo || false,
+      isStaticImage: data.isStaticImage || false
+    };
   } catch (error: any) {
     // Enhanced error handling
     if (error.name === 'TypeError' && error.message.includes('fetch')) {

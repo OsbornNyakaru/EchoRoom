@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "./ui/button"
-import { Bot, X, Loader2, AlertCircle, Maximize2, Minimize2, Phone, Video } from "lucide-react"
+import { Bot, X, Loader2, AlertCircle, Maximize2, Minimize2, Phone, Video, Play, Sparkles } from "lucide-react"
 import { cn } from "../lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar"
 import { Badge } from "./ui/badge"
@@ -19,6 +19,7 @@ interface TavusAvatarCardProps {
   isOpen: boolean
   onToggle: () => void
   onClose: () => void
+  localImageUrl?: string // New prop for local image
 }
 
 const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({ 
@@ -26,14 +27,20 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   replicaId, 
   isOpen, 
   onToggle, 
-  onClose 
+  onClose,
+  localImageUrl // New prop
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [activeMode, setActiveMode] = useState<'preview' | 'call' | 'voice'>('preview')
   
-  // Use the custom hook for avatar data
-  const { avatarUrl, loading, error, refetch } = useTavusAvatar(isOpen ? personaId : null)
+  // Use the custom hook for avatar data, but only if no local image is provided
+  const { avatarUrl: tavusAvatarUrl, loading, error, isDemo, isStaticImage: tavusIsStaticImage, refetch } = useTavusAvatar(isOpen && !localImageUrl ? personaId : null)
+
+  // Determine which image to use and its properties
+  const avatarUrl = localImageUrl || tavusAvatarUrl
+  const isStaticImage = localImageUrl ? true : tavusIsStaticImage
+  const isLocalImage = !!localImageUrl
 
   useEffect(() => {
     setMounted(true)
@@ -83,7 +90,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         <div className="relative z-10 flex flex-col items-center space-y-4">
           <div className="relative">
             <Avatar className="w-20 h-20 border-2 border-white/20 shadow-2xl ring-4 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all duration-300">
-              <AvatarImage src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop" alt="Tavus AI Avatar" />
+              <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop"} alt="Tavus AI Avatar" />
               <AvatarFallback className="text-white font-bold text-xl bg-gradient-to-br from-emerald-500 to-teal-500">
                 <Bot className="w-10 h-10" />
               </AvatarFallback>
@@ -102,6 +109,11 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
             <div className="text-xs text-white/50 font-mono">
               Replica: {replicaId}
             </div>
+            {isLocalImage && (
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs font-medium px-2 py-1">
+                Custom Image
+              </Badge>
+            )}
           </div>
 
           <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs font-medium px-3 py-1">
@@ -132,7 +144,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
           className={cn(
             "relative bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden",
             "shadow-2xl border border-white/20",
-            "flex flex-col w-full max-w-2xl h-[85vh] max-h-[800px]",
+            "flex flex-col w-full max-w-2xl h-[90vh] max-h-[800px]",
           )}
           initial={{ opacity: 0, scale: 0.9, y: 50 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -141,21 +153,28 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         >
           {/* Mobile Header */}
           {activeMode !== 'call' && (
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
-              <div className="flex items-center gap-4">
-                <Avatar className="w-12 h-12 border-2 border-white/20 ring-2 ring-emerald-500/30">
-                  <AvatarImage src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=48&h=48&fit=crop" alt="Tavus AI Avatar" />
+            <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-10 h-10 border-2 border-white/20 ring-2 ring-emerald-500/30">
+                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"} alt="Tavus AI Avatar" />
                   <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500">
-                    <Bot className="w-6 h-6 text-white" />
+                    <Bot className="w-5 h-5 text-white" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+                  <h3 className="text-white font-semibold text-base flex items-center gap-2">
                     Tavus AI Avatar
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   </h3>
-                  <p className="text-white/60 text-sm">Interactive AI Assistant</p>
-                  <p className="text-white/40 text-xs font-mono">Replica: {replicaId}</p>
+                  <p className="text-white/60 text-xs">Interactive AI Assistant</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-white/40 text-xs font-mono">Replica: {replicaId}</p>
+                    {isLocalImage && (
+                      <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs px-1 py-0">
+                        Custom
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -182,11 +201,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
               />
             ) : (
               <>
-                <div className="flex-1 bg-black/20 flex items-center justify-center p-6 relative">
+                <div className="flex-1 bg-black/20 flex flex-col min-h-0 relative">
                   <MobileContent
-                    loading={loading}
-                    error={error}
+                    loading={isLocalImage ? false : loading}
+                    error={isLocalImage ? null : error}
                     avatarUrl={avatarUrl}
+                    isDemo={isLocalImage ? false : isDemo}
+                    isStaticImage={isStaticImage}
+                    isLocalImage={isLocalImage}
                     onRetry={refetch}
                     onStartVideoCall={handleStartVideoCall}
                     onStartVoiceCall={handleStartVoiceCall}
@@ -194,7 +216,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
                   />
                 </div>
                 {activeMode === 'voice' && (
-                  <div className="border-t border-white/10 bg-white/5 p-4">
+                  <div className="border-t border-white/10 bg-white/5 p-4 flex-shrink-0">
                     <div className="flex items-center gap-2 mb-3">
                       <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
                       <span className="text-sm font-medium text-white">Voice Assistant</span>
@@ -236,10 +258,10 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         >
           {/* Desktop Header */}
           {activeMode !== 'call' && (
-            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5">
+            <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <Avatar className="w-14 h-14 border-2 border-white/20 ring-2 ring-emerald-500/30">
-                  <AvatarImage src="https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=56&h=56&fit=crop" alt="Tavus AI Avatar" />
+                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=56&h=56&fit=crop"} alt="Tavus AI Avatar" />
                   <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500">
                     <Bot className="w-7 h-7 text-white" />
                   </AvatarFallback>
@@ -250,7 +272,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
                   </h3>
                   <p className="text-white/70 text-base">Interactive AI Assistant Experience</p>
-                  <p className="text-white/50 text-sm font-mono">Replica: {replicaId}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-white/50 text-sm font-mono">Replica: {replicaId}</p>
+                    {isLocalImage && (
+                      <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs px-2 py-1">
+                        Custom Image
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -299,11 +328,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
             ) : (
               <>
                 {/* Video Section */}
-                <div className="flex-1 bg-black/20 flex items-center justify-center p-8 relative">
+                <div className="flex-1 bg-black/20 flex flex-col min-h-0 relative">
                   <DesktopContent
-                    loading={loading}
-                    error={error}
+                    loading={isLocalImage ? false : loading}
+                    error={isLocalImage ? null : error}
                     avatarUrl={avatarUrl}
+                    isDemo={isLocalImage ? false : isDemo}
+                    isStaticImage={isStaticImage}
+                    isLocalImage={isLocalImage}
                     onRetry={refetch}
                     onStartVideoCall={handleStartVideoCall}
                     onStartVoiceCall={handleStartVoiceCall}
@@ -360,90 +392,131 @@ const MobileContent: React.FC<{
   loading: boolean
   error: string | null
   avatarUrl: string | null
+  isDemo: boolean
+  isStaticImage: boolean
+  isLocalImage: boolean
   onRetry: () => void
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
+}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
   return (
-    <AnimatePresence mode="wait">
-      {loading && (
-        <motion.div
-          key="loading"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex flex-col items-center gap-4 text-white"
-        >
-          <Loader2 className="w-12 h-12 animate-spin text-emerald-400" />
-          <p className="text-lg font-medium">Loading avatar...</p>
-          <p className="text-sm text-white/60">Preparing your AI assistant</p>
-        </motion.div>
-      )}
-
-      {error && (
-        <motion.div
-          key="error"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="flex flex-col items-center gap-4 text-center max-w-md"
-        >
-          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-red-400" />
-          </div>
-          <div>
-            <p className="text-red-400 font-medium text-lg mb-2">Connection Failed</p>
-            <p className="text-white/70 text-sm">{error}</p>
-          </div>
-          <Button
-            onClick={onRetry}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white"
+    <div className="flex-1 flex items-center justify-center p-4 relative">
+      <AnimatePresence mode="wait">
+        {loading && !isLocalImage && (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-4 text-white"
           >
-            Try Again
-          </Button>
-        </motion.div>
-      )}
+            <Loader2 className="w-12 h-12 animate-spin text-emerald-400" />
+            <p className="text-lg font-medium">Loading avatar...</p>
+            <p className="text-sm text-white/60">Preparing your AI assistant</p>
+          </motion.div>
+        )}
 
-      {avatarUrl && !loading && !error && (
-        <motion.div
-          key="video"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="w-full h-full flex flex-col items-center justify-center gap-6"
-        >
-          <video
-            src={avatarUrl}
-            controls
-            autoPlay
-            loop
-            className="rounded-2xl shadow-2xl w-full h-full object-contain max-w-md max-h-96"
-          />
-          
-          {/* Action Buttons */}
-          <div className="flex gap-4">
+        {error && !isLocalImage && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex flex-col items-center gap-4 text-center max-w-md"
+          >
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-red-400" />
+            </div>
+            <div>
+              <p className="text-red-400 font-medium text-lg mb-2">Connection Failed</p>
+              <p className="text-white/70 text-sm">{error}</p>
+            </div>
             <Button
-              onClick={onStartVideoCall}
-              size="lg"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-6"
+              onClick={onRetry}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white"
             >
-              <Video className="w-5 h-5 mr-2" />
-              Start Video Call
+              Try Again
             </Button>
-            <Button
-              onClick={onStartVoiceCall}
-              size="lg"
-              variant="outline"
-              className="bg-blue-500/10 border-blue-400/30 text-blue-400 hover:bg-blue-500/20 px-6"
-            >
-              <Phone className="w-5 h-5 mr-2" />
-              Voice Only
-            </Button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+
+        {avatarUrl && (!loading || isLocalImage) && (!error || isLocalImage) && (
+          <motion.div
+            key="media"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative w-full h-full flex items-center justify-center"
+          >
+            {/* Media Container */}
+            <div className="relative w-full max-w-sm aspect-square">
+              {isStaticImage ? (
+                <img
+                  src={avatarUrl}
+                  alt="AI Avatar Preview"
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl"
+                />
+              ) : (
+                <video
+                  src={avatarUrl}
+                  controls
+                  autoPlay
+                  loop
+                  className="w-full h-full object-cover rounded-2xl shadow-2xl"
+                />
+              )}
+              
+              {/* Overlay with Buttons */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-2xl flex flex-col justify-end p-6">
+                {/* Title */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center mb-6"
+                >
+                  <h3 className="text-white text-xl font-semibold mb-2">
+                    {isLocalImage ? "Custom Avatar Ready" : "AI Avatar Ready"}
+                  </h3>
+                  <p className="text-white/80 text-sm">Choose how you'd like to interact</p>
+                  {isLocalImage && (
+                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs mt-2">
+                      Using Custom Image
+                    </Badge>
+                  )}
+                </motion.div>
+
+                {/* Action Buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex flex-col gap-3"
+                >
+                  <Button
+                    onClick={onStartVideoCall}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg shadow-emerald-500/25 border-0 h-12"
+                  >
+                    <Video className="w-5 h-5 mr-3" />
+                    <span className="font-semibold">Start Video Call</span>
+                  </Button>
+                  <Button
+                    onClick={onStartVoiceCall}
+                    size="lg"
+                    variant="outline"
+                    className="w-full bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-400/30 text-blue-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 hover:border-blue-400/50 shadow-lg shadow-blue-500/10 h-12 backdrop-blur-sm"
+                  >
+                    <Phone className="w-5 h-5 mr-3" />
+                    <span className="font-semibold">Voice Only</span>
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -451,93 +524,134 @@ const DesktopContent: React.FC<{
   loading: boolean
   error: string | null
   avatarUrl: string | null
+  isDemo: boolean
+  isStaticImage: boolean
+  isLocalImage: boolean
   onRetry: () => void
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
+}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall  }) => {
   return (
-    <AnimatePresence mode="wait">
-      {loading && (
-        <motion.div
-          key="loading"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="flex flex-col items-center gap-6 text-white"
-        >
-          <Loader2 className="w-20 h-20 animate-spin text-emerald-400" />
-          <div className="text-center">
-            <p className="text-2xl font-medium mb-2">Loading avatar...</p>
-            <p className="text-lg text-white/60">Preparing your AI assistant experience</p>
-          </div>
-        </motion.div>
-      )}
-
-      {error && (
-        <motion.div
-          key="error"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="flex flex-col items-center gap-6 text-center max-w-2xl"
-        >
-          <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center">
-            <AlertCircle className="w-12 h-12 text-red-400" />
-          </div>
-          <div>
-            <p className="text-red-400 font-medium text-2xl mb-3">Connection Failed</p>
-            <p className="text-white/70 text-lg">{error}</p>
-          </div>
-          <Button
-            onClick={onRetry}
-            size="lg"
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 text-lg"
+    <div className="flex-1 flex items-center justify-center p-8 relative">
+      <AnimatePresence mode="wait">
+        {loading && !isLocalImage && (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col items-center gap-6 text-white"
           >
-            Try Again
-          </Button>
-        </motion.div>
-      )}
+            <Loader2 className="w-20 h-20 animate-spin text-emerald-400" />
+            <div className="text-center">
+              <p className="text-2xl font-medium mb-2">Loading avatar...</p>
+              <p className="text-lg text-white/60">Preparing your AI assistant experience</p>
+            </div>
+          </motion.div>
+        )}
 
-      {avatarUrl && !loading && !error && (
-        <motion.div
-          key="video"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.9 }}
-          className="w-full h-full flex flex-col items-center justify-center gap-8"
-        >
-          <video
-            src={avatarUrl}
-            controls
-            autoPlay
-            loop
-            className="rounded-3xl shadow-2xl w-full h-full object-contain max-w-4xl max-h-full"
-          />
-          
-          {/* Action Buttons */}
-          <div className="flex gap-6">
+        {error && !isLocalImage && (
+          <motion.div
+            key="error"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="flex flex-col items-center gap-6 text-center max-w-2xl"
+          >
+            <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+            </div>
+            <div>
+              <p className="text-red-400 font-medium text-2xl mb-3">Connection Failed</p>
+              <p className="text-white/70 text-lg">{error}</p>
+            </div>
             <Button
-              onClick={onStartVideoCall}
+              onClick={onRetry}
               size="lg"
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 text-lg"
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 text-lg"
             >
-              <Video className="w-6 h-6 mr-3" />
-              Start Video Call
+              Try Again
             </Button>
-            <Button
-              onClick={onStartVoiceCall}
-              size="lg"
-              variant="outline"
-              className="bg-blue-500/10 border-blue-400/30 text-blue-400 hover:bg-blue-500/20 px-8 py-4 text-lg"
-            >
-              <Phone className="w-6 h-6 mr-3" />
-              Voice Only
-            </Button>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+
+        {avatarUrl && (!loading || isLocalImage) && (!error || isLocalImage) && (
+          <motion.div
+            key="media"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="relative w-full h-full flex items-center justify-center"
+          >
+            {/* Media Container */}
+            <div className="relative w-full max-w-2xl aspect-video">
+              {isStaticImage ? (
+                <img
+                  src={avatarUrl}
+                  alt="AI Avatar Preview"
+                  className="w-full h-full object-cover rounded-3xl shadow-2xl"
+                />
+              ) : (
+                <video
+                  src={avatarUrl}
+                  controls
+                  autoPlay
+                  loop
+                  className="w-full h-full object-cover rounded-3xl shadow-2xl"
+                />
+              )}
+              
+              {/* Overlay with Buttons */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent rounded-3xl flex flex-col justify-end p-8">
+                {/* Title */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-center mb-8"
+                >
+                  <h3 className="text-white text-2xl font-bold mb-3">
+                    {isLocalImage ? "Custom Avatar Ready" : "AI Avatar Ready"}
+                  </h3>
+                  <p className="text-white/90 text-lg">Choose how you'd like to interact with your AI assistant</p>
+                  {isLocalImage && (
+                    <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-sm mt-3 px-3 py-1">
+                      Using Custom Image
+                    </Badge>
+                  )}
+                </motion.div>
+
+                {/* Action Buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="flex justify-center gap-6"
+                >
+                  <Button
+                    onClick={onStartVideoCall}
+                    size="lg"
+                    className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-8 py-4 text-lg shadow-lg shadow-emerald-500/25 border-0 h-14"
+                  >
+                    <Video className="w-6 h-6 mr-3" />
+                    <span className="font-semibold">Start Video Call</span>
+                  </Button>
+                  <Button
+                    onClick={onStartVoiceCall}
+                    size="lg"
+                    variant="outline"
+                    className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-blue-400/30 text-blue-300 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 hover:border-blue-400/50 px-8 py-4 text-lg shadow-lg shadow-blue-500/10 h-14 backdrop-blur-sm"
+                  >
+                    <Phone className="w-6 h-6 mr-3" />
+                    <span className="font-semibold">Voice Only</span>
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 

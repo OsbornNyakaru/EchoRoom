@@ -5,6 +5,8 @@ export function useTavusAvatar(personaId: string | null) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(false);
+  const [isStaticImage, setIsStaticImage] = useState(false);
 
   const fetchAvatar = async () => {
     if (!personaId) {
@@ -17,13 +19,17 @@ export function useTavusAvatar(personaId: string | null) {
     setError(null);
 
     try {
-      const url = await fetchTavusAvatarUrl(personaId);
-      setAvatarUrl(url);
+      const data = await fetchTavusAvatarUrl(personaId);
+      setAvatarUrl(data.url);
+      setIsDemo(data.isDemo);
+      setIsStaticImage(data.isStaticImage);
       setError(null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load Tavus avatar';
       setError(errorMessage);
       setAvatarUrl(null);
+      setIsDemo(false);
+      setIsStaticImage(false);
     } finally {
       setLoading(false);
     }
@@ -36,6 +42,8 @@ export function useTavusAvatar(personaId: string | null) {
       setAvatarUrl(null);
       setError(null);
       setLoading(false);
+      setIsDemo(false);
+      setIsStaticImage(false);
     }
   }, [personaId]);
 
@@ -47,6 +55,8 @@ export function useTavusAvatar(personaId: string | null) {
     avatarUrl, 
     loading, 
     error, 
+    isDemo,
+    isStaticImage,
     refetch 
   };
 }
