@@ -1,5 +1,3 @@
-"use client"
-
 import type React from "react"
 import { useEffect, useState, useCallback } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
@@ -32,6 +30,8 @@ import {
   Settings,
   MoreVertical,
   Book,
+  AlertTriangle,
+  ExternalLink,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -317,6 +317,9 @@ const Room: React.FC = () => {
   const [hasPlayedZoom, setHasPlayedZoom] = useState(false)
   const [isTavusOpen, setIsTavusOpen] = useState(false)
   const [isParticipantsSheetOpen, setIsParticipantsSheetOpen] = useState(false)
+  const [availablePersonas, setAvailablePersonas] = useState<any[]>([])
+  const [availableReplicas, setAvailableReplicas] = useState<any[]>([])
+  const [tavusConfigError, setTavusConfigError] = useState<string | null>(null)
 
   const moodColor = getMoodColor(mood)
   const MoodIcon = getMoodIcon(mood)
@@ -327,6 +330,93 @@ const Room: React.FC = () => {
     mood,
     avatar: "/avatars/default-avatar.png",
   }
+
+  // Tavus configuration - prioritize environment variables, then use first available
+  const [personaId, setPersonaId] = useState<string>(import.meta.env.VITE_TAVUS_PERSONA_ID || '')
+  const [replicaId, setReplicaId] = useState<string>(import.meta.env.VITE_TAVUS_REPLICA_ID || '')
+
+  // Load available personas and replicas on component mount
+  useEffect(() => {
+    const loadTavusData = async () => {
+      try {
+        console.log('🔍 Loading available Tavus personas and replicas...');
+        
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+        
+        // Load personas
+        const personasResponse = await fetch(`${backendUrl}/api/tavus/personas`);
+        if (personasResponse.ok) {
+          const personasData = await personasResponse.json();
+          if (personasData.success && personasData.personas) {
+            setAvailablePersonas(personasData.personas);
+            console.log('✅ Loaded personas:', personasData.personas.length);
+            
+            // Only set persona if not already set from environment variable
+            if (!personaId && personasData.personas.length > 0) {
+              const firstPersona = personasData.personas[0];
+              const personaIdToUse = firstPersona.persona_id || firstPersona.id;
+              setPersonaId(personaIdToUse);
+              console.log('🎭 Using persona:', personaIdToUse);
+            }
+          }
+        }
+
+        // Load replicas
+        const replicasResponse = await fetch(`${backendUrl}/api/tavus/replicas`);
+        if (replicasResponse.ok) {
+          const replicasData = await replicasResponse.json();
+          if (replicasData.success && replicasData.replicas) {
+            setAvailableReplicas(replicasData.replicas);
+            console.log('✅ Loaded replicas:', replicasData.replicas.length);
+            
+            // Only set replica if not already set from environment variable
+            if (!replicaId && replicasData.replicas.length > 0) {
+              const firstReplica = replicasData.replicas[0];
+              const replicaIdToUse = firstReplica.replica_id || firstReplica.id;
+              setReplicaId(replicaIdToUse);
+              console.log('🎬 Using replica:', replicaIdToUse);
+            }
+          }
+        }
+
+        // Check if we have valid configuration
+        const hasPersonas = availablePersonas.length > 0 || personaId;
+        const hasReplicas = availableReplicas.length > 0 || replicaId;
+        
+        if (!hasPersonas || !hasReplicas) {
+          const missingItems = [];
+          if (!hasPersonas) missingItems.push('personas');
+          if (!hasReplicas) missingItems.push('replicas');
+          
+          setTavusConfigError(
+            `No ${missingItems.join(' or ')} found in your Tavus account. ` +
+            `Please create them in your Tavus dashboard first.`
+          );
+        } else {
+          setTavusConfigError(null);
+        }
+
+      } catch (error) {
+        console.error('❌ Failed to load Tavus data:', error);
+        setTavusConfigError('Failed to load Tavus configuration. Please check your API key and connection.');
+      }
+    };
+
+    loadTavusData();
+  }, []);
+
+  // Debug: Log the IDs being used
+  useEffect(() => {
+    console.log('🔍 Tavus Configuration Debug:');
+    console.log('  personaId:', personaId);
+    console.log('  replicaId:', replicaId);
+    console.log('  Available personas:', availablePersonas.length);
+    console.log('  Available replicas:', availableReplicas.length);
+    console.log('  Environment variables:');
+    console.log('    VITE_TAVUS_PERSONA_ID:', import.meta.env.VITE_TAVUS_PERSONA_ID);
+    console.log('    VITE_TAVUS_REPLICA_ID:', import.meta.env.VITE_TAVUS_REPLICA_ID);
+    console.log('  Configuration error:', tavusConfigError);
+  }, [personaId, replicaId, availablePersonas, availableReplicas, tavusConfigError]);
 
   // Update connection status based on socket state
   useEffect(() => {
@@ -359,8 +449,6 @@ const Room: React.FC = () => {
       return () => clearInterval(timer)
     }
   }, [roomId])
-
-const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
 
   // Auto-join room based on mood
   useEffect(() => {
@@ -410,7 +498,9 @@ const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
 
   // Tavus Avatar handlers
   const handleTavusToggle = () => {
-    setIsTavusOpen(!isTavusOpen)
+    if (personaId && replicaId) {
+      setIsTavusOpen(!isTavusOpen)
+    }
   }
 
   const handleTavusClose = () => {
@@ -570,10 +660,21 @@ const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
                   <DropdownMenuItem
                     onClick={handleTavusToggle}
                     className="text-white hover:bg-white/10 focus:bg-white/10"
+                    disabled={!personaId || !replicaId}
                   >
                     <Bot className="mr-2 h-4 w-4" />
                     <span>AI Avatar {isTavusOpen ? "(Close)" : "(Open)"}</span>
+                    {(!personaId || !replicaId) && <AlertTriangle className="ml-auto h-3 w-3 text-yellow-400" />}
                   </DropdownMenuItem>
+                  {tavusConfigError && (
+                    <DropdownMenuItem
+                      onClick={() => window.open('https://app.tavus.io', '_blank')}
+                      className="text-yellow-400 hover:bg-yellow-500/10 focus:bg-yellow-500/10"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      <span>Setup Tavus</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem className="text-white hover:bg-white/10 focus:bg-white/10">
                     <Settings className="mr-2 h-4 w-4" />
@@ -653,12 +754,29 @@ const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
                 exit={{ y: "100%" }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <TavusAvatarCard
-                  personaId={personaId}
-                  isOpen={isTavusOpen}
-                  onToggle={handleTavusToggle}
-                  onClose={handleTavusClose}
-                />
+                {personaId && replicaId ? (
+                  <TavusAvatarCard
+                    personaId={personaId}
+                    replicaId={replicaId}
+                    isOpen={isTavusOpen}
+                    onToggle={handleTavusToggle}
+                    onClose={handleTavusClose}
+                  />
+                ) : (
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 text-center">
+                    <AlertTriangle className="w-8 h-8 text-red-400 mx-auto mb-2" />
+                    <p className="text-red-400 font-medium">Tavus Configuration Error</p>
+                    <p className="text-red-300 text-sm mt-1">{tavusConfigError}</p>
+                    <Button
+                      onClick={() => window.open('https://app.tavus.io', '_blank')}
+                      className="mt-3 bg-blue-500 hover:bg-blue-600 text-white"
+                      size="sm"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open Tavus Dashboard
+                    </Button>
+                  </div>
+                )}
               </motion.div>
             </motion.div>
           )}
@@ -806,12 +924,31 @@ const personaId = import.meta.env.VITE_TAVUS_PERSONA_ID;
               </div>
 
               <ScrollArea className="flex-1 p-3">
-                <TavusAvatarCard
-                  personaId={personaId}
-                  isOpen={isTavusOpen}
-                  onToggle={handleTavusToggle}
-                  onClose={handleTavusClose}
-                />
+                {/* Tavus Avatar Card */}
+                {personaId && replicaId ? (
+                  <TavusAvatarCard
+                    personaId={personaId}
+                    replicaId={replicaId}
+                    isOpen={isTavusOpen}
+                    onToggle={handleTavusToggle}
+                    onClose={handleTavusClose}
+                  />
+                ) : (
+                  <div className="mb-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-center">
+                    <AlertTriangle className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+                    <p className="text-yellow-400 font-medium text-sm">Tavus Setup Required</p>
+                    <p className="text-yellow-300 text-xs mt-1">{tavusConfigError}</p>
+                    <Button
+                      onClick={() => window.open('https://app.tavus.io', '_blank')}
+                      className="mt-2 bg-blue-500 hover:bg-blue-600 text-white"
+                      size="sm"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      Setup
+                    </Button>
+                  </div>
+                )}
+
                 {participants.length === 0 ? (
                   <motion.div
                     className="flex flex-col items-center justify-center h-full text-center p-6"
