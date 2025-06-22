@@ -4,7 +4,6 @@ import { useLocation, useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSocketContext } from "../context/SocketContext"
 import ChatWindow from "../components/chat/ChatWindow"
-import myLocalImage from '@/assets/avatar.png';
 import TavusAvatarCard from "../components/TavusAvatarCard"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -33,7 +32,6 @@ import {
   Book,
   AlertTriangle,
   ExternalLink,
-  Image,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -51,6 +49,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import MessageInput from "../components/chat/MessageInput"
+
+// Import your local image here
+import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
 
 interface VoiceWaveProps {
   isSpeaking: boolean
@@ -323,12 +324,6 @@ const Room: React.FC = () => {
   const [availableReplicas, setAvailableReplicas] = useState<any[]>([])
   const [tavusConfigError, setTavusConfigError] = useState<string | null>(null)
 
-  // Local image configuration - Add your image import and configuration here
-  const [useLocalImage, setUseLocalImage] = useState<boolean>(false)
-  
-  // Example local image URL - replace with your actual imported image
-  const localImageUrl = useLocalImage ? myLocalImage : undefined;
-
   const moodColor = getMoodColor(mood)
   const MoodIcon = getMoodIcon(mood)
 
@@ -342,6 +337,10 @@ const Room: React.FC = () => {
   // Tavus configuration - prioritize environment variables, then use first available
   const [personaId, setPersonaId] = useState<string>(import.meta.env.VITE_TAVUS_PERSONA_ID || '')
   const [replicaId, setReplicaId] = useState<string>(import.meta.env.VITE_TAVUS_REPLICA_ID || '')
+
+  // Local image configuration - replace with your actual imported image
+  const localImageUrl = myLocalImage; // Use this when you import your image
+  // const localImageUrl = "https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&dpr=2"; // Example image
 
   // Load available personas and replicas on component mount
   useEffect(() => {
@@ -424,9 +423,8 @@ const Room: React.FC = () => {
     console.log('    VITE_TAVUS_PERSONA_ID:', import.meta.env.VITE_TAVUS_PERSONA_ID);
     console.log('    VITE_TAVUS_REPLICA_ID:', import.meta.env.VITE_TAVUS_REPLICA_ID);
     console.log('  Configuration error:', tavusConfigError);
-    console.log('  Using local image:', useLocalImage);
     console.log('  Local image URL:', localImageUrl);
-  }, [personaId, replicaId, availablePersonas, availableReplicas, tavusConfigError, useLocalImage, localImageUrl]);
+  }, [personaId, replicaId, availablePersonas, availableReplicas, tavusConfigError, localImageUrl]);
 
   // Update connection status based on socket state
   useEffect(() => {
@@ -650,7 +648,7 @@ const Room: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-1 flex-shrink-0">
-              {/* Mobile Menu with Tavus Avatar Option */}
+              {/* Mobile Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="h-8 w-8 lg:hidden">
@@ -666,13 +664,6 @@ const Room: React.FC = () => {
                   >
                     <Users className="mr-2 h-4 w-4" />
                     <span>Participants ({participants.length})</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setUseLocalImage(!useLocalImage)}
-                    className="text-white hover:bg-white/10 focus:bg-white/10"
-                  >
-                    <Image className="mr-2 h-4 w-4" />
-                    <span>{useLocalImage ? "Use Tavus Image" : "Use Local Image"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleTavusToggle}
@@ -717,18 +708,6 @@ const Room: React.FC = () => {
                   onClick={() => setIsParticipantsSheetOpen(true)}
                 >
                   <Users className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-8 w-8 bg-white/5 border-white/20 text-white hover:bg-white/10",
-                    useLocalImage && "bg-purple-500/20 border-purple-400/50 text-purple-400"
-                  )}
-                  onClick={() => setUseLocalImage(!useLocalImage)}
-                  title={useLocalImage ? "Switch to Tavus Image" : "Switch to Local Image"}
-                >
-                  <Image className="h-4 w-4" />
                 </Button>
                 <Button
                   onClick={() => setIsMuted(!isMuted)}
@@ -954,38 +933,6 @@ const Room: React.FC = () => {
               </div>
 
               <ScrollArea className="flex-1 p-3">
-                {/* Image Source Toggle */}
-                <div className="mb-4 p-3 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-white">Avatar Image</span>
-                    <Button
-                      onClick={() => setUseLocalImage(!useLocalImage)}
-                      size="sm"
-                      variant="outline"
-                      className={cn(
-                        "text-xs h-6 px-2",
-                        useLocalImage 
-                          ? "bg-purple-500/20 border-purple-400/50 text-purple-300 hover:bg-purple-500/30" 
-                          : "bg-blue-500/20 border-blue-400/50 text-blue-300 hover:bg-blue-500/30"
-                      )}
-                    >
-                      <Image className="w-3 h-3 mr-1" />
-                      {useLocalImage ? "Local" : "Tavus"}
-                    </Button>
-                  </div>
-                  {useLocalImage && (
-                    <div className="text-xs text-purple-300 bg-purple-500/10 p-2 rounded border border-purple-500/20">
-                      <p className="font-medium mb-1">Using Custom Image</p>
-                      <p className="text-purple-400">To use your own image:</p>
-                      <ol className="list-decimal list-inside mt-1 space-y-0.5 text-purple-400">
-                        <li>Add image to <code className="bg-purple-500/20 px-1 rounded">src/assets/</code></li>
-                        <li>Import in Room.tsx</li>
-                        <li>Update localImageUrl</li>
-                      </ol>
-                    </div>
-                  )}
-                </div>
-
                 {/* Tavus Avatar Card */}
                 {personaId && replicaId ? (
                   <TavusAvatarCard

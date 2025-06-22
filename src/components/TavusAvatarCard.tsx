@@ -19,7 +19,7 @@ interface TavusAvatarCardProps {
   isOpen: boolean
   onToggle: () => void
   onClose: () => void
-  localImageUrl?: string // New prop for local image
+  localImageUrl?: string
 }
 
 const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({ 
@@ -28,16 +28,16 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
   isOpen, 
   onToggle, 
   onClose,
-  localImageUrl // New prop
+  localImageUrl
 }) => {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [activeMode, setActiveMode] = useState<'preview' | 'call' | 'voice'>('preview')
   
-  // Use the custom hook for avatar data, but only if no local image is provided
+  // Only fetch Tavus avatar if no local image is provided
   const { avatarUrl: tavusAvatarUrl, loading, error, isDemo, isStaticImage: tavusIsStaticImage, refetch } = useTavusAvatar(isOpen && !localImageUrl ? personaId : null)
 
-  // Determine which image to use and its properties
+  // Use local image if provided, otherwise use Tavus avatar
   const avatarUrl = localImageUrl || tavusAvatarUrl
   const isStaticImage = localImageUrl ? true : tavusIsStaticImage
   const isLocalImage = !!localImageUrl
@@ -90,7 +90,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
         <div className="relative z-10 flex flex-col items-center space-y-4">
           <div className="relative">
             <Avatar className="w-20 h-20 border-2 border-white/20 shadow-2xl ring-4 ring-emerald-500/20 group-hover:ring-emerald-500/40 transition-all duration-300">
-              <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop"} alt="Tavus AI Avatar" />
+              <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=80&h=80&fit=crop"} alt="AI Avatar" />
               <AvatarFallback className="text-white font-bold text-xl bg-gradient-to-br from-emerald-500 to-teal-500">
                 <Bot className="w-10 h-10" />
               </AvatarFallback>
@@ -103,7 +103,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
           <div className="text-center space-y-2">
             <h3 className="text-white font-semibold text-lg flex items-center justify-center gap-2">
               <Bot className="w-5 h-5 text-emerald-400" />
-              Tavus AI Avatar
+              AI Avatar
             </h3>
             <p className="text-white/70 text-sm">Click to start conversation</p>
             <div className="text-xs text-white/50 font-mono">
@@ -156,14 +156,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
             <div className="flex items-center justify-between p-4 border-b border-white/10 bg-white/5 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10 border-2 border-white/20 ring-2 ring-emerald-500/30">
-                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"} alt="Tavus AI Avatar" />
+                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=40&h=40&fit=crop"} alt="AI Avatar" />
                   <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500">
                     <Bot className="w-5 h-5 text-white" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-white font-semibold text-base flex items-center gap-2">
-                    Tavus AI Avatar
+                    AI Avatar
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
                   </h3>
                   <p className="text-white/60 text-xs">Interactive AI Assistant</p>
@@ -198,6 +198,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
                 isActive={true}
                 onCallEnd={handleEndVideoCall}
                 className="flex-1"
+                showCustomControls={false} // Hide custom controls by default
               />
             ) : (
               <>
@@ -261,14 +262,14 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
             <div className="flex items-center justify-between p-6 border-b border-white/10 bg-white/5 flex-shrink-0">
               <div className="flex items-center gap-4">
                 <Avatar className="w-14 h-14 border-2 border-white/20 ring-2 ring-emerald-500/30">
-                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=56&h=56&fit=crop"} alt="Tavus AI Avatar" />
+                  <AvatarImage src={localImageUrl || "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=56&h=56&fit=crop"} alt="AI Avatar" />
                   <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-500">
                     <Bot className="w-7 h-7 text-white" />
                   </AvatarFallback>
                 </Avatar>
                 <div>
                   <h3 className="text-white font-bold text-xl flex items-center gap-3">
-                    Tavus AI Avatar
+                    AI Avatar
                     <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
                   </h3>
                   <p className="text-white/70 text-base">Interactive AI Assistant Experience</p>
@@ -324,6 +325,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
                 isActive={true}
                 onCallEnd={handleEndVideoCall}
                 className="flex-1"
+                showCustomControls={false} // Hide custom controls by default
               />
             ) : (
               <>
@@ -399,7 +401,7 @@ const MobileContent: React.FC<{
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall }) => {
+}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
   return (
     <div className="flex-1 flex items-center justify-center p-4 relative">
       <AnimatePresence mode="wait">
@@ -531,7 +533,7 @@ const DesktopContent: React.FC<{
   onStartVideoCall: () => void
   onStartVoiceCall: () => void
   activeMode: 'preview' | 'call' | 'voice'
-}> = ({ loading, error, avatarUrl, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall  }) => {
+}> = ({ loading, error, avatarUrl, isDemo, isStaticImage, isLocalImage, onRetry, onStartVideoCall, onStartVoiceCall, activeMode }) => {
   return (
     <div className="flex-1 flex items-center justify-center p-8 relative">
       <AnimatePresence mode="wait">

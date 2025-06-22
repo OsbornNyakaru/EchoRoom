@@ -5,7 +5,9 @@ import {
   VideoOff, 
   Mic, 
   MicOff, 
+  Phone, 
   PhoneOff,
+  Settings,
   Maximize2,
   Minimize2,
   Volume2,
@@ -22,6 +24,7 @@ interface WebRTCVideoCallProps {
   isActive: boolean;
   onCallEnd: () => void;
   className?: string;
+  showCustomControls?: boolean; // New optional prop
 }
 
 const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
@@ -29,7 +32,8 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
   replicaId,
   isActive,
   onCallEnd,
-  className
+  className,
+  showCustomControls = false // Default to false - hide controls by default
 }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
@@ -98,8 +102,10 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
     };
   }, [isConnected, isActive]);
 
-  // Auto-hide controls
+  // Auto-hide controls (only if custom controls are enabled)
   useEffect(() => {
+    if (!showCustomControls) return;
+    
     let timeout: NodeJS.Timeout;
     
     if (showControls && isConnected) {
@@ -111,7 +117,7 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
     return () => {
       if (timeout) clearTimeout(timeout);
     };
-  }, [showControls, isConnected]);
+  }, [showControls, isConnected, showCustomControls]);
 
   // Handle mute toggle
   const handleMuteToggle = () => {
@@ -156,8 +162,8 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         isFullscreen && "fixed inset-0 z-[9999] rounded-none",
         className
       )}
-      onMouseMove={() => setShowControls(true)}
-      onTouchStart={() => setShowControls(true)}
+      onMouseMove={() => showCustomControls && setShowControls(true)}
+      onTouchStart={() => showCustomControls && setShowControls(true)}
     >
       {/* Connection Status Overlay */}
       <AnimatePresence>
@@ -224,7 +230,7 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                 title="Tavus CVI Conversation"
               />
               
-              {/* Overlay message for better UX */}
+              {/* Minimal overlay message */}
               <div className="absolute top-4 left-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg p-3 text-white text-sm">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -232,15 +238,27 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
                     <span>Tavus CVI Active</span>
                     <span className="text-xs text-white/60 ml-2">({replicaId})</span>
                   </div>
-                  <Button
-                    onClick={openConversationInNewTab}
-                    size="sm"
-                    variant="outline"
-                    className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs"
-                  >
-                    <ExternalLink className="w-3 h-3 mr-1" />
-                    Open in New Tab
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      onClick={openConversationInNewTab}
+                      size="sm"
+                      variant="outline"
+                      className="bg-white/10 border-white/20 text-white hover:bg-white/20 text-xs h-6 px-2"
+                    >
+                      <ExternalLink className="w-3 h-3 mr-1" />
+                      New Tab
+                    </Button>
+                    {/* Simple end call button - always visible */}
+                    <Button
+                      onClick={handleCallEnd}
+                      size="sm"
+                      variant="destructive"
+                      className="bg-red-500 hover:bg-red-600 text-white text-xs h-6 px-2"
+                    >
+                      <PhoneOff className="w-3 h-3 mr-1" />
+                      End
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -260,9 +278,9 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         )}
       </div>
 
-      {/* Local Video (Picture-in-Picture) */}
+      {/* Local Video (Picture-in-Picture) - Only show if custom controls are enabled */}
       <AnimatePresence>
-        {localStream && !isVideoOff && (
+        {showCustomControls && localStream && !isVideoOff && (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -286,9 +304,9 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Call Duration */}
+      {/* Call Duration - Only show if custom controls are enabled */}
       <AnimatePresence>
-        {isConnected && (
+        {showCustomControls && isConnected && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -303,9 +321,9 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Controls */}
+      {/* Custom Controls - Only show if showCustomControls is true */}
       <AnimatePresence>
-        {showControls && (
+        {showCustomControls && showControls && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -394,7 +412,7 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         )}
       </AnimatePresence>
 
-      {/* Connection State Indicator */}
+      {/* Connection State Indicator - Always visible but minimal */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
         <div className={cn(
           "px-3 py-1 rounded-full text-xs font-medium",
@@ -410,8 +428,8 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
         </div>
       </div>
 
-      {/* Conversation Info */}
-      {conversationId && (
+      {/* Conversation Info - Only show if custom controls are enabled */}
+      {showCustomControls && conversationId && (
         <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-sm rounded-lg px-3 py-2 text-white text-xs z-10">
           <div className="font-mono">ID: {conversationId.slice(-8)}</div>
         </div>
