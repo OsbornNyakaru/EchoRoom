@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Home from './pages/Home';
 import Welcome from './pages/Welcome';
 import Room from './pages/Room';
@@ -11,7 +11,6 @@ function App() {
   const state = location.state as { backgroundLocation?: Location };
 
   return (
-
       <SocketProvider>
         <Routes location={state?.backgroundLocation || location}>
           <Route path="/" element={<Home />} />
