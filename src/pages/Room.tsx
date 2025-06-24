@@ -312,7 +312,7 @@ const ParticipantCard: React.FC<{
   )
 }
 
-const Room: React.FC<RoomProps> = ({ onLeaveRoomCallback }) => {
+const Room: React.FC<RoomProps> = ({ }) => {
   const {
     isConnected,
     roomId,

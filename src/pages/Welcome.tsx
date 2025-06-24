@@ -209,10 +209,6 @@ export default function Welcome() {
     navigate('/')
   }
 
-  const handleRoomsClick = () => {
-    navigate('/#rooms')
-  }
-
   const handleAboutClick = () => {
     // Navigate to home page and scroll to about section
     navigate('/')
