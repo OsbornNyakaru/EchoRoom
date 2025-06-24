@@ -47,7 +47,6 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
   const [callDuration, setCallDuration] = useState(0);
   const [showControls, setShowControls] = useState(false); // Changed to false by default
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [setShowNavigationHelp] = useState(false);
   const [isVerticalPanelExpanded, setIsVerticalPanelExpanded] = useState(false);
 
   const {
