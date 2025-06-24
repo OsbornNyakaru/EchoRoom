@@ -51,7 +51,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import MessageInput from "../components/chat/MessageInput"
-import { SessionSummary } from "../types/session"
+import { SessionSummary } from "@/types/session"
 
 // Import your local image here
 // import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
@@ -608,7 +608,6 @@ const Room: React.FC<RoomProps> = ({ onLeaveRoomCallback }) => {
 
   // Handle leaving room with session summary
   const handleLeaveRoom = useCallback(() => {
-    // Create session summary
     const sessionSummary: SessionSummary = {
       roomId: roomId || 'unknown',
       mood: mood,
@@ -620,18 +619,9 @@ const Room: React.FC<RoomProps> = ({ onLeaveRoomCallback }) => {
       userName: userName || 'Anonymous',
       userId: userId || 'unknown'
     };
-
-    console.log('📊 Creating session summary:', sessionSummary);
-
-    // Call the callback to show dashboard
-    onLeaveRoomCallback?.(sessionSummary);
-
-    // Leave the room
     leaveRoom();
-    
-    // Navigate to home
-    navigate("/");
-  }, [roomId, mood, sessionTime, participants.length, sessionStartTime, userName, userId, onLeaveRoomCallback, leaveRoom, navigate])
+    navigate("/dashboard", { state: { sessionSummary } });
+  }, [roomId, mood, sessionTime, participants.length, sessionStartTime, userName, userId, leaveRoom, navigate])
 
   // Format session time
   const formatTime = (seconds: number) => {
