@@ -54,7 +54,7 @@ import MessageInput from "../components/chat/MessageInput"
 import { SessionSummary } from "@/types/session"
 
 // Import your local image here
-// import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
+import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
 
 interface VoiceWaveProps {
   isSpeaking: boolean
@@ -433,8 +433,7 @@ const Room: React.FC<RoomProps> = ({ }) => {
   const [replicaId, setReplicaId] = useState<string>(import.meta.env.VITE_TAVUS_REPLICA_ID || '')
 
   // Local image configuration - replace with your actual imported image
-  // const localImageUrl = myLocalImage; // Use this when you import your image
-  const localImageUrl = "https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&dpr=2"; // Example image
+  const localImageUrl = myLocalImage; // Use this when you import your image
 
   // Handle room selection
   const handleRoomSelect = (roomMood: string) => {
