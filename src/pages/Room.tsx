@@ -27,11 +27,13 @@ import {
   Radio,
   Waves,
   Bot,
-  Settings,
+  Grid3X3,
+  ChevronDown,
   MoreVertical,
   Book,
   AlertTriangle,
   ExternalLink,
+  ArrowRight,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
@@ -49,15 +51,31 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import MessageInput from "../components/chat/MessageInput"
+import { SessionSummary } from "../types/session"
 
 // Import your local image here
-import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
+// import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
 
 interface VoiceWaveProps {
   isSpeaking: boolean
   isMuted: boolean
   size?: "sm" | "md" | "lg"
   color?: string
+}
+
+interface RoomProps {
+  onLeaveRoomCallback?: (summary: SessionSummary) => void;
+}
+
+interface RoomOption {
+  id: string;
+  name: string;
+  mood: string;
+  emoji: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  isActive: boolean;
 }
 
 const VoiceWave: React.FC<VoiceWaveProps> = ({ isSpeaking, isMuted, size = "md", color = "#10b981" }) => {
@@ -294,7 +312,7 @@ const ParticipantCard: React.FC<{
   )
 }
 
-const Room: React.FC = () => {
+const Room: React.FC<RoomProps> = ({ onLeaveRoomCallback }) => {
   const {
     isConnected,
     roomId,
@@ -315,6 +333,7 @@ const Room: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting")
   const [sessionTime, setSessionTime] = useState(0)
+  const [sessionStartTime] = useState(new Date().toISOString())
   const [isMuted, setIsMuted] = useState(false)
   const [isDeafened, setIsDeafened] = useState(false)
   const [hasPlayedZoom, setHasPlayedZoom] = useState(false)
@@ -323,6 +342,7 @@ const Room: React.FC = () => {
   const [availablePersonas, setAvailablePersonas] = useState<any[]>([])
   const [availableReplicas, setAvailableReplicas] = useState<any[]>([])
   const [tavusConfigError, setTavusConfigError] = useState<string | null>(null)
+  const [showRoomsDropdown, setShowRoomsDropdown] = useState(false)
 
   const moodColor = getMoodColor(mood)
   const MoodIcon = getMoodIcon(mood)
@@ -334,13 +354,108 @@ const Room: React.FC = () => {
     avatar: "/avatars/default-avatar.png",
   }
 
+  // All available rooms with emojis as requested
+  const allRooms: RoomOption[] = [
+    {
+      id: "hopeful",
+      name: "Hopeful Room",
+      mood: "hopeful",
+      emoji: "🌅",
+      description: "Looking forward with optimism",
+      icon: Sun,
+      color: "#f59e0b",
+      isActive: true
+    },
+    {
+      id: "lonely",
+      name: "Lonely Room", 
+      mood: "lonely",
+      emoji: "🌙",
+      description: "Seeking connection and understanding",
+      icon: Moon,
+      color: "#6366f1",
+      isActive: true
+    },
+    {
+      id: "motivated",
+      name: "Motivated Room",
+      mood: "motivated", 
+      emoji: "⚡",
+      description: "Ready to take on challenges",
+      icon: Zap,
+      color: "#ef4444",
+      isActive: true
+    },
+    {
+      id: "calm",
+      name: "Calm Room",
+      mood: "calm",
+      emoji: "🧘",
+      description: "Finding peace in the moment",
+      icon: Coffee,
+      color: "#10b981",
+      isActive: true
+    },
+    {
+      id: "loving",
+      name: "Loving Room",
+      mood: "loving",
+      emoji: "💝",
+      description: "Embracing warmth and compassion",
+      icon: Heart,
+      color: "#ec4899",
+      isActive: true
+    },
+    {
+      id: "joyful",
+      name: "Joyful Room",
+      mood: "joyful",
+      emoji: "✨",
+      description: "Celebrating life's beautiful moments",
+      icon: Sparkles,
+      color: "#8b5cf6",
+      isActive: true
+    },
+    {
+      id: "books",
+      name: "Books Room",
+      mood: "books",
+      emoji: "📚",
+      description: "Dive into stories and share reads",
+      icon: Book,
+      color: "#9B59B6",
+      isActive: true
+    }
+  ];
+
   // Tavus configuration - prioritize environment variables, then use first available
   const [personaId, setPersonaId] = useState<string>(import.meta.env.VITE_TAVUS_PERSONA_ID || '')
   const [replicaId, setReplicaId] = useState<string>(import.meta.env.VITE_TAVUS_REPLICA_ID || '')
 
   // Local image configuration - replace with your actual imported image
-  const localImageUrl = myLocalImage; // Use this when you import your image
-  // const localImageUrl = "https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&dpr=2"; // Example image
+  // const localImageUrl = myLocalImage; // Use this when you import your image
+  const localImageUrl = "https://images.pexels.com/photos/1043474/pexels-photo-1043474.jpeg?auto=compress&cs=tinysrgb&w=800&h=800&dpr=2"; // Example image
+
+  // Handle room selection
+  const handleRoomSelect = (roomMood: string) => {
+    setShowRoomsDropdown(false);
+    navigate(`/welcome?mood=${encodeURIComponent(roomMood)}`);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showRoomsDropdown) {
+        const target = event.target as Element;
+        if (!target.closest('.rooms-dropdown-container')) {
+          setShowRoomsDropdown(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showRoomsDropdown]);
 
   // Load available personas and replicas on component mount
   useEffect(() => {
@@ -491,11 +606,32 @@ const Room: React.FC = () => {
     autoJoinRoom()
   }, [isConnected, userId, userName, mood, roomId, joinRoom])
 
-  // Handle leaving room
+  // Handle leaving room with session summary
   const handleLeaveRoom = useCallback(() => {
-    leaveRoom()
-    navigate("/")
-  }, [leaveRoom, navigate])
+    // Create session summary
+    const sessionSummary: SessionSummary = {
+      roomId: roomId || 'unknown',
+      mood: mood,
+      duration: sessionTime,
+      participantsCount: participants.length,
+      messagesCount: undefined, // Could be tracked if needed
+      joinedAt: sessionStartTime,
+      leftAt: new Date().toISOString(),
+      userName: userName || 'Anonymous',
+      userId: userId || 'unknown'
+    };
+
+    console.log('📊 Creating session summary:', sessionSummary);
+
+    // Call the callback to show dashboard
+    onLeaveRoomCallback?.(sessionSummary);
+
+    // Leave the room
+    leaveRoom();
+    
+    // Navigate to home
+    navigate("/");
+  }, [roomId, mood, sessionTime, participants.length, sessionStartTime, userName, userId, onLeaveRoomCallback, leaveRoom, navigate])
 
   // Format session time
   const formatTime = (seconds: number) => {
@@ -665,6 +801,27 @@ const Room: React.FC = () => {
                     <Users className="mr-2 h-4 w-4" />
                     <span>Participants ({participants.length})</span>
                   </DropdownMenuItem>
+                  
+                  {/* Rooms Submenu for Mobile */}
+                  <DropdownMenuLabel className="text-white text-xs">Switch Rooms</DropdownMenuLabel>
+                  {allRooms.map((room) => (
+                    <DropdownMenuItem
+                      key={room.id}
+                      onClick={() => handleRoomSelect(room.mood)}
+                      className={cn(
+                        "text-white hover:bg-white/10 focus:bg-white/10 flex items-center gap-2",
+                        room.mood === mood && "bg-white/5"
+                      )}
+                    >
+                      <span className="text-sm">{room.emoji}</span>
+                      <span className="flex-1">{room.name}</span>
+                      {room.mood === mood && (
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                  
+                  <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem
                     onClick={handleTavusToggle}
                     className="text-white hover:bg-white/10 focus:bg-white/10"
@@ -683,11 +840,6 @@ const Room: React.FC = () => {
                       <span>Setup Tavus</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator className="bg-white/10" />
-                  <DropdownMenuItem className="text-white hover:bg-white/10 focus:bg-white/10">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Room Settings</span>
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem
                     onClick={handleLeaveRoom}
@@ -709,6 +861,73 @@ const Room: React.FC = () => {
                 >
                   <Users className="h-4 w-4" />
                 </Button>
+                
+                {/* Rooms Dropdown for Desktop */}
+                <div className="relative rooms-dropdown-container">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 bg-white/5 border-white/20 text-white hover:bg-white/10 flex items-center gap-1"
+                    onClick={() => setShowRoomsDropdown(!showRoomsDropdown)}
+                  >
+                    <Grid3X3 className="h-3 w-3" />
+                    <ChevronDown className={cn("h-2 w-2 transition-transform duration-200", showRoomsDropdown && "rotate-180")} />
+                  </Button>
+                  
+                  {/* Rooms Dropdown */}
+                  <AnimatePresence>
+                    {showRoomsDropdown && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute top-full mt-2 right-0 w-72 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-50 overflow-hidden"
+                      >
+                        <div className="p-3">
+                          <div className="text-white font-medium text-sm mb-3 px-2">Switch to Another Room</div>
+                          <div className="space-y-1 max-h-80 overflow-y-auto">
+                            {allRooms.map((room, index) => (
+                              <motion.button
+                                key={room.id}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: index * 0.05 }}
+                                onClick={() => handleRoomSelect(room.mood)}
+                                className={cn(
+                                  "w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 hover:bg-white/10 text-left group",
+                                  room.mood === mood && "bg-white/5 border border-white/20"
+                                )}
+                                style={{
+                                  background: room.mood === mood 
+                                    ? `linear-gradient(135deg, ${room.color}20 0%, rgba(255, 255, 255, 0.05) 100%)`
+                                    : undefined
+                                }}
+                              >
+                                <div className="text-lg flex-shrink-0">
+                                  {room.emoji}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-white font-medium text-sm flex items-center gap-2">
+                                    {room.name}
+                                    {room.mood === mood && (
+                                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                    )}
+                                  </div>
+                                  <div className="text-white/60 text-xs truncate">
+                                    {room.description}
+                                  </div>
+                                </div>
+                                <ArrowRight className="w-3 h-3 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all duration-200 flex-shrink-0" />
+                              </motion.button>
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                
                 <Button
                   onClick={() => setIsMuted(!isMuted)}
                   variant="outline"
