@@ -5,16 +5,20 @@ import {
   VideoOff, 
   Mic, 
   MicOff, 
+  Phone, 
   PhoneOff,
+  Settings,
   Maximize2,
   Minimize2,
   Volume2,
   VolumeX,
   ExternalLink,
   ArrowLeft,
+  Home,
   RotateCcw,
   ChevronLeft,
   ChevronRight,
+  Info,
   Hash,
   Clock,
   Wifi
@@ -47,6 +51,7 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
   const [callDuration, setCallDuration] = useState(0);
   const [showControls, setShowControls] = useState(false); // Changed to false by default
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [showNavigationHelp, setShowNavigationHelp] = useState(false);
   const [isVerticalPanelExpanded, setIsVerticalPanelExpanded] = useState(false);
 
   const {
@@ -124,6 +129,19 @@ const WebRTCVideoCall: React.FC<WebRTCVideoCallProps> = ({
       if (timeout) clearTimeout(timeout);
     };
   }, [showControls, isConnected, showCustomControls]);
+
+  // Show navigation help after a delay when connected
+  useEffect(() => {
+    if (isConnected && !showCustomControls) {
+      const timer = setTimeout(() => {
+        setShowNavigationHelp(true);
+        // Auto-hide after 5 seconds
+        setTimeout(() => setShowNavigationHelp(false), 5000);
+      }, 3000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isConnected, showCustomControls]);
 
   // Handle mute toggle
   const handleMuteToggle = () => {
