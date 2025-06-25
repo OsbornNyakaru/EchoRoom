@@ -369,20 +369,32 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (exists) return prev;
         return [...prev, newParticipant];
       });
-      // Add a system message for join
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `system-join-${newParticipant.userId}-${Date.now()}`,
-          userId: 'system',
-          userName: 'System',
-          avatar: '/avatars/default-avatar.png',
-          content: `${newParticipant.userName} has joined the room.`,
-          type: 'system',
-          timestamp: new Date(),
-          reactions: []
-        }
-      ]);
+
+      // Only show the system message if the joining user is NOT yourself
+      if (newParticipant.userId !== userId) {
+        setMessages(prev => {
+          // Prevent duplicate join system messages for the same user
+          const alreadyExists = prev.some(
+            m =>
+              m.type === 'system' &&
+              m.content === `${newParticipant.userName} has joined the room.`
+          );
+          if (alreadyExists) return prev;
+          return [
+            ...prev,
+            {
+              id: `system-join-${newParticipant.userId}-${Date.now()}`,
+              userId: 'system',
+              userName: 'System',
+              avatar: '/avatars/default-avatar.png',
+              content: `${newParticipant.userName} has joined the room.`,
+              type: 'system',
+              timestamp: new Date(),
+              reactions: []
+            }
+          ];
+        });
+      }
     };
 
     const handleUserLeft = (data: any) => {
