@@ -391,3 +391,20 @@
   scrollbar-width: thin;
   scrollbar-color: #555 #333;
 }
+
+/* Modern minimal scrollbar for dropdowns and overlays */
+.modern-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #a3c4bc #232946;
+}
+.modern-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #a3c4bc 0%, #8e9aaf 100%);
+  border-radius: 6px;
+}
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

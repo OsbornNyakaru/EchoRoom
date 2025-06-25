@@ -334,8 +334,6 @@ const Room: React.FC<RoomProps> = ({ }) => {
   const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected">("connecting")
   const [sessionTime, setSessionTime] = useState(0)
   const [sessionStartTime] = useState(new Date().toISOString())
-  const [isMuted, setIsMuted] = useState(false)
-  const [isDeafened, setIsDeafened] = useState(false)
   const [hasPlayedZoom, setHasPlayedZoom] = useState(false)
   const [isTavusOpen, setIsTavusOpen] = useState(false)
   const [isParticipantsSheetOpen, setIsParticipantsSheetOpen] = useState(false)
@@ -875,7 +873,7 @@ const Room: React.FC<RoomProps> = ({ }) => {
                       >
                         <div className="p-3">
                           <div className="text-white font-medium text-sm mb-3 px-2">Switch to Another Room</div>
-                          <div className="space-y-1 max-h-80 overflow-y-auto">
+                          <div className="space-y-1 max-h-80 overflow-y-auto modern-scrollbar">
                             {allRooms.map((room, index) => (
                               <motion.button
                                 key={room.id}
@@ -917,28 +915,6 @@ const Room: React.FC<RoomProps> = ({ }) => {
                   </AnimatePresence>
                 </div>
                 
-                <Button
-                  onClick={() => setIsMuted(!isMuted)}
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-8 w-8 bg-white/5 border-white/20 text-white hover:bg-white/10",
-                    isMuted && "bg-red-500/20 border-red-400/50 text-red-400",
-                  )}
-                >
-                  {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                <Button
-                  onClick={() => setIsDeafened(!isDeafened)}
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "h-8 w-8 bg-white/5 border-white/20 text-white hover:bg-white/10",
-                    isDeafened && "bg-red-500/20 border-red-400/50 text-red-400",
-                  )}
-                >
-                  {isDeafened ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
                 <Button
                   onClick={handleLeaveRoom}
                   variant="outline"
@@ -1235,45 +1211,6 @@ const Room: React.FC<RoomProps> = ({ }) => {
             </Card>
           </motion.div>
         )}
-
-        {/* Mobile Voice Controls - Better spacing */}
-        <motion.div
-          className="lg:hidden p-3 lg:p-2 border-t border-white/10 bg-black/20 backdrop-blur-xl"
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-        >
-          <div className="flex items-center justify-center gap-3 max-w-sm mx-auto">
-            <Button
-              onClick={() => setIsMuted(!isMuted)}
-              variant="outline"
-              size="lg"
-              className={cn(
-                "flex-1 bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-12",
-                isMuted && "bg-red-500/20 border-red-400/50 text-red-400",
-              )}
-            >
-              <div className="flex flex-col items-center gap-1">
-                {isMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                <span className="text-xs font-medium">{isMuted ? "Unmute" : "Mute"}</span>
-              </div>
-            </Button>
-            <Button
-              onClick={() => setIsDeafened(!isDeafened)}
-              variant="outline"
-              size="lg"
-              className={cn(
-                "flex-1 bg-white/5 border-white/20 text-white hover:bg-white/10 backdrop-blur-sm h-12",
-                isDeafened && "bg-red-500/20 border-red-400/50 text-red-400",
-              )}
-            >
-              <div className="flex flex-col items-center gap-1">
-                {isDeafened ? <VolumeX className="h-4 w-4" /> : <Headphones className="h-4 w-4" />}
-                <span className="text-xs font-medium">{isDeafened ? "Listen" : "Deafen"}</span>
-              </div>
-            </Button>
-          </div>
-        </motion.div>
       </div>
     </div>
   )
