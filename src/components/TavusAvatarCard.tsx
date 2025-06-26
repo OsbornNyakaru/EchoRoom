@@ -483,7 +483,7 @@ const MobileContent: React.FC<{
                   <p className="text-white/80 text-sm">Choose how you'd like to interact</p>
                   {isLocalImage && (
                     <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs mt-2">
-                      Using Custom Image
+                      Tavus or ElevenLabs?
                     </Badge>
                   )}
                 </motion.div>

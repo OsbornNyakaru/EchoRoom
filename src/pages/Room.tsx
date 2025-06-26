@@ -50,7 +50,7 @@ import {
 import MessageInput from "../components/chat/MessageInput"
 import { SessionSummary } from "@/types/session"
 
-// Import your local image here
+// Local image for AI avatar
 import myLocalImage from '../assets/my-avatar.jpg'; // Uncomment and update path when you add your image
 
 interface VoiceWaveProps {
