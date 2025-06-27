@@ -265,18 +265,34 @@ export default function HomePage() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {moodOptions.map((item) => (
-              <Button
-                key={item.title}
-                variant="outline"
-                className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
-                onClick={() => handleMoodClick(item.title)}
-              >
-                <div className={`${item.color}`}>{item.icon}</div>
-                <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
-                <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
-              </Button>
-            ))}
+            {/* Render the first 6 cards */}
+            {moodOptions
+              .filter((item) => item.title !== "Books")
+              .map((item) => (
+                <Button
+                  key={item.title}
+                  variant="outline"
+                  className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
+                  onClick={() => handleMoodClick(item.title)}
+                >
+                  <div className={`${item.color}`}>{item.icon}</div>
+                  <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
+                  <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
+                </Button>
+              ))}
+
+            {/* Last row: center the Books card */}
+            <div className="hidden lg:block"></div>
+            <Button
+              variant="outline"
+              className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${moodOptions.find((item) => item.title === "Books")?.bg} ${mood === "Books" ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8 col-start-2`}
+              onClick={() => handleMoodClick("Books")}
+            >
+              <div className={`${moodOptions.find((item) => item.title === "Books")?.color}`}>{moodOptions.find((item) => item.title === "Books")?.icon}</div>
+              <div className="text-white text-lg font-semibold w-full text-center">Books</div>
+              <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{moodOptions.find((item) => item.title === "Books")?.desc}</p>
+            </Button>
+            <div className="hidden lg:block"></div>
           </div>
         </Card>
       </div>
