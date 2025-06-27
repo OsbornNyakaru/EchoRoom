@@ -761,22 +761,6 @@ export default function Welcome() {
                       <VolumeX className="h-4 w-4 sm:h-5 sm:w-5 text-white/60 drop-shadow-sm" />
                     )}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="glass-card rounded-full w-10 h-10 sm:w-12 sm:h-12 p-0 border-2 border-white/20 backdrop-blur-md bg-white/10 hover:bg-white/20 hover:border-white/30 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-                    onClick={() => setIsMicEnabled(!isMicEnabled)}
-                    disabled={isJoiningRoom}
-                    style={{
-                      boxShadow: `0 4px 20px ${currentColor}30`,
-                    }}
-                  >
-                    {isMicEnabled ? (
-                      <Mic className="h-4 w-4 sm:h-5 sm:w-5 text-white drop-shadow-sm" />
-                    ) : (
-                      <MicOff className="h-4 w-4 sm:h-5 sm:w-5 text-white/60 drop-shadow-sm" />
-                    )}
-                  </Button>
                 </div>
               </div>
 
