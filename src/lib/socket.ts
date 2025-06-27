@@ -4,25 +4,137 @@ import { io, Socket } from 'socket.io-client';
 const SOCKET_URL: string =
   import.meta.env.VITE_SOCKET_URL ||
   import.meta.env.VITE_BACKEND_URL ||
-  (window.location.hostname === 'localhost' ? 'ws://localhost:5000' : undefined);
+  (window.location.hostname === 'localhost' ? 'http://localhost:5000' : 'http://localhost:5000');
 
-const socket = io(SOCKET_URL, {
-  transports: ['websocket', 'polling'],
-  withCredentials: true,
-}) as Socket;
+console.log('[Socket] Connecting to:', SOCKET_URL);
+
+// Function to wake up the server before connecting
+const wakeUpServer = async (): Promise<boolean> => {
+  try {
+    console.log('[Socket] Waking up server...');
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
+    const response = await fetch(`${SOCKET_URL}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      console.log('[Socket] ✅ Server is awake');
+      return true;
+    } else {
+      console.warn('[Socket] ⚠️ Server responded but not healthy:', response.status);
+      return false;
+    }
+  } catch (error) {
+    console.error('[Socket] ❌ Failed to wake up server:', error);
+    return false;
+  }
+};
+
+// Create socket with enhanced configuration
+const createSocket = () => {
+  return io(SOCKET_URL, {
+    transports: ['websocket', 'polling'],
+    withCredentials: true,
+    timeout: 30000, // Connection timeout
+    forceNew: false,
+    reconnection: true,
+    reconnectionDelay: 2000, // Wait 2 seconds before first reconnect
+    reconnectionDelayMax: 10000, // Max 10 seconds between reconnects
+    reconnectionAttempts: 10, // Number of reconnection attempts
+    // Remove invalid properties - these are server-side only
+    // pingTimeout and pingInterval are not valid client options
+  }) as Socket;
+};
+
+// Initialize socket
+const socket = createSocket();
+
+// Enhanced connection handling
+socket.on('connect', () => {
+  console.log('[Socket] ✅ Connected to WebSocket server with ID:', socket.id);
+  console.log('[Socket] Transport:', socket.io.engine?.transport?.name);
+  console.log('[Socket] Socket state:', {
+    connected: socket.connected,
+    disconnected: socket.disconnected,
+    id: socket.id
+  });
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('[Socket] ❌ Disconnected from WebSocket server:', reason);
+  
+  // If disconnected due to server going to sleep, try to wake it up
+  if (reason === 'transport close' || reason === 'transport error') {
+    console.log('[Socket] 🔄 Server might be sleeping, attempting to wake up...');
+    wakeUpServer();
+  }
+});
+
+socket.on('connect_error', async (err: Error) => {
+  console.error('[Socket] ❌ Socket connection error:', err.message);
+  console.error('[Socket] Full error:', err);
+  
+  // If connection fails, try to wake up server
+  if (err.message.includes('timeout') || err.message.includes('websocket')) {
+    console.log('[Socket] 🔄 Connection timeout detected, trying to wake server...');
+    const serverAwake = await wakeUpServer();
+    
+    if (serverAwake) {
+      console.log('[Socket] 🔄 Server is awake, retrying connection...');
+      // Socket.io will automatically retry, but we can force it
+      setTimeout(() => {
+        if (!socket.connected) {
+          socket.connect();
+        }
+      }, 2000);
+    }
+  }
+});
+
+socket.on('reconnect', (attemptNumber) => {
+  console.log('[Socket] 🔄 Reconnected after', attemptNumber, 'attempts');
+});
+
+socket.on('reconnect_attempt', async (attemptNumber) => {
+  console.log('[Socket] 🔄 Reconnection attempt', attemptNumber);
+  
+  // Try to wake server on every few attempts
+  if (attemptNumber % 3 === 1) {
+    await wakeUpServer();
+  }
+});
+
+socket.on('reconnect_error', (error) => {
+  console.error('[Socket] ❌ Reconnection error:', error);
+});
+
+socket.on('reconnect_failed', () => {
+  console.error('[Socket] ❌ Reconnection failed - all attempts exhausted');
+  console.log('[Socket] 🔄 Trying to wake server and create new connection...');
+  
+  // Last resort: wake server and create new socket
+  wakeUpServer().then((awake) => {
+    if (awake) {
+      setTimeout(() => {
+        socket.connect();
+      }, 5000);
+    }
+  });
+});
+
+// Debug: Log all events
+socket.onAny((eventName, ...args) => {
+  console.log(`[Socket] 📡 Event received: ${eventName}`, args);
+});
+
+// Export function to manually wake server
+export const wakeServer = wakeUpServer;
 
 export default socket;
-
-socket.on('connect', () => {
-  console.log('Connected to WebSocket server');
-});
-
-socket.on('disconnect', () => {
-  console.log('Disconnected from WebSocket server');
-});
-
-socket.on('connect_error', (err: Error) => {
-  console.error('Socket connection error:', err.message);
-});
-
-// In production, set VITE_SOCKET_URL to your deployed backend WebSocket endpoint (e.g. wss://your-backend.onrender.com)
