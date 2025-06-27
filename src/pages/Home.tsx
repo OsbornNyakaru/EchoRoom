@@ -67,9 +67,9 @@ export default function HomePage() {
   ]
 
   const stats = [
-    { icon: <Users className="h-6 w-6" />, label: "Active Members", value: "5.3K+" },
-    { icon: <Clock className="h-6 w-6" />, label: "Daily Sessions", value: "847" },
-    { icon: <Sparkles className="h-6 w-6" />, label: "Satisfaction Rate", value: "94%" },
+    { icon: <Target className="h-6 w-6" />, label: "Mood Categories", value: "7+ Moods" },
+    { icon: <Lightbulb className="h-6 w-6" />, label: "Tavus + ElevenLabs, Mistral", value: "AI-Integration" },
+    { icon: <Globe className="h-6 w-6" />, label: "Global Reach", value: "24/7 Access" },
   ]
 
   const features = [
