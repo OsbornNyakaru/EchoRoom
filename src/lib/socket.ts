@@ -12,10 +12,17 @@ console.log('[Socket] Connecting to:', SOCKET_URL);
 const wakeUpServer = async (): Promise<boolean> => {
   try {
     console.log('[Socket] Waking up server...');
+    
+    // Create AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    
     const response = await fetch(`${SOCKET_URL}/api/health`, {
       method: 'GET',
-      timeout: 10000, // 10 second timeout
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       console.log('[Socket] ✅ Server is awake');
@@ -40,8 +47,7 @@ const createSocket = () => {
     reconnection: true,
     reconnectionDelay: 2000, // Wait 2 seconds before first reconnect
     reconnectionDelayMax: 10000, // Max 10 seconds between reconnects
-    reconnectionAttempts: 10, // Try 10 times
-    maxReconnectionAttempts: 10,
+    reconnectionAttempts: 10, // Fixed: use correct property name
     // Add ping/pong to keep connection alive
     pingTimeout: 60000,
     pingInterval: 25000,
