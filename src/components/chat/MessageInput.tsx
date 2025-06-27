@@ -10,16 +10,12 @@ import {
   Mic,
   MicOff,
   X,
-  Plus,
   Image,
   Camera,
   FileText,
   MapPin,
   Gift,
   Sticker,
-  Hash,
-  AtSign,
-  MoreHorizontal,
 } from "lucide-react"
 import { cn } from "../../lib/utils"
 
