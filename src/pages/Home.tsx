@@ -274,16 +274,16 @@ export default function HomePage() {
               // Desktop: 3 columns, center Books in last row
               if (typeof window !== 'undefined' && window.innerWidth < 640) {
                 // Mobile
-                return [...others, books].map((item) => (
+                return [...others, books].filter(Boolean).map((item) => (
                   <Button
-                    key={item.title}
+                    key={item!.title}
                     variant="outline"
-                    className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
-                    onClick={() => handleMoodClick(item.title)}
+                    className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item!.bg} ${mood === item!.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
+                    onClick={() => item && handleMoodClick(item.title)}
                   >
-                    <div className={`${item.color}`}>{item.icon}</div>
-                    <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
-                    <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
+                    <div className={`${item?.color}`}>{item?.icon}</div>
+                    <div className="text-white text-lg font-semibold w-full text-center">{item?.title}</div>
+                    <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item?.desc}</p>
                   </Button>
                 ));
               } else if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -296,9 +296,11 @@ export default function HomePage() {
                 }
                 // If odd, center Books in last row
                 if (total % 2 !== 0) {
-                  rows.push([null, books]);
+                  rows.push([null, books].filter(Boolean));
                 } else {
-                  rows[rows.length - 1].push(books);
+                  if (books) {
+                    rows[rows.length - 1].push(books);
+                  }
                 }
                 return rows.flat().map((item, idx) =>
                   item ? (
