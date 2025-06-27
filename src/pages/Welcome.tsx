@@ -690,6 +690,12 @@ export default function Welcome() {
               </p>
             </motion.div>
 
+            {/* Tavus AI Avatar Indicator - now outside avatar section */}
+            <div className="flex justify-center mb-2">
+              <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-400/30 text-xs font-semibold px-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
+                Tavus AI Avatar (Pre-recorded)
+              </span>
+            </div>
             {/* Tavus Avatar Section */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
