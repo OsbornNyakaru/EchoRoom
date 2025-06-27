@@ -109,8 +109,8 @@ class SoundManager {
    */
   public initializeSounds(): void {
     // Load actual sound files from assets
-    this.preloadSound('beep', '/sounds/beep.mp3');
-    this.preloadSound('zoom', '/sounds/zoom.mp3');
+   this.preloadSound('beep', '/sounds/beep.mp3');
+   this.preloadSound('zoom', '/sounds/zoom.mp3');
   }
 }
 
