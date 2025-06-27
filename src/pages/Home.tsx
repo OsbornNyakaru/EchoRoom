@@ -265,34 +265,85 @@ export default function HomePage() {
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Render the first 6 cards */}
-            {moodOptions
-              .filter((item) => item.title !== "Books")
-              .map((item) => (
-                <Button
-                  key={item.title}
-                  variant="outline"
-                  className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
-                  onClick={() => handleMoodClick(item.title)}
-                >
-                  <div className={`${item.color}`}>{item.icon}</div>
-                  <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
-                  <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
-                </Button>
-              ))}
-
-            {/* Last row: center the Books card */}
-            <div className="hidden lg:block"></div>
-            <Button
-              variant="outline"
-              className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${moodOptions.find((item) => item.title === "Books")?.bg} ${mood === "Books" ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8 col-start-2`}
-              onClick={() => handleMoodClick("Books")}
-            >
-              <div className={`${moodOptions.find((item) => item.title === "Books")?.color}`}>{moodOptions.find((item) => item.title === "Books")?.icon}</div>
-              <div className="text-white text-lg font-semibold w-full text-center">Books</div>
-              <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{moodOptions.find((item) => item.title === "Books")?.desc}</p>
-            </Button>
-            <div className="hidden lg:block"></div>
+            {(() => {
+              const books = moodOptions.find((item) => item.title === "Books");
+              const others = moodOptions.filter((item) => item.title !== "Books");
+              const total = moodOptions.length;
+              // Mobile: 1 column, just render all in order
+              // Tablet: 2 columns, center Books if odd number of cards
+              // Desktop: 3 columns, center Books in last row
+              if (typeof window !== 'undefined' && window.innerWidth < 640) {
+                // Mobile
+                return [...others, books].map((item) => (
+                  <Button
+                    key={item.title}
+                    variant="outline"
+                    className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
+                    onClick={() => handleMoodClick(item.title)}
+                  >
+                    <div className={`${item.color}`}>{item.icon}</div>
+                    <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
+                    <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
+                  </Button>
+                ));
+              } else if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                // Tablet (2 columns)
+                const rows = [];
+                const perRow = 2;
+                const n = others.length;
+                for (let i = 0; i < n; i += perRow) {
+                  rows.push(others.slice(i, i + perRow));
+                }
+                // If odd, center Books in last row
+                if (total % 2 !== 0) {
+                  rows.push([null, books]);
+                } else {
+                  rows[rows.length - 1].push(books);
+                }
+                return rows.flat().map((item, idx) =>
+                  item ? (
+                    <Button
+                      key={item.title}
+                      variant="outline"
+                      className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
+                      onClick={() => handleMoodClick(item.title)}
+                    >
+                      <div className={`${item.color}`}>{item.icon}</div>
+                      <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
+                      <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
+                    </Button>
+                  ) : (
+                    <div key={"empty-" + idx} className="" />
+                  )
+                );
+              } else {
+                // Desktop (3 columns)
+                const n = others.length;
+                const perRow = 3;
+                const rows = [];
+                for (let i = 0; i < n; i += perRow) {
+                  rows.push(others.slice(i, i + perRow));
+                }
+                // Center Books in last row
+                rows.push([null, books, null]);
+                return rows.flat().map((item, idx) =>
+                  item ? (
+                    <Button
+                      key={item.title}
+                      variant="outline"
+                      className={`flex flex-col items-center justify-center min-h-[200px] gap-4 rounded-3xl border-2 transition-all duration-500 glass-card bg-gradient-to-br ${item.bg} ${mood === item.title ? "border-[#FFB4A2] scale-105" : "border-transparent hover:border-white/30 hover:bg-white/10"} text-center px-4 py-6 md:px-6 md:py-8`}
+                      onClick={() => handleMoodClick(item.title)}
+                    >
+                      <div className={`${item.color}`}>{item.icon}</div>
+                      <div className="text-white text-lg font-semibold w-full text-center">{item.title}</div>
+                      <p className="text-sm text-[#D8E2DC] w-full text-center max-w-xs mx-auto break-words">{item.desc}</p>
+                    </Button>
+                  ) : (
+                    <div key={"empty-" + idx} className="hidden lg:block" />
+                  )
+                );
+              }
+            })()}
           </div>
         </Card>
       </div>
