@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Smile, Heart, Coffee, Star, Moon, Sun, Sparkles, Users, Clock, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Github, Twitter, Mail, ArrowUp } from "lucide-react"
+import { Smile, Heart, Coffee, Star, Moon, Sun, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Github, Twitter, Mail, ArrowUp, Target, Lightbulb, Globe } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import FloatingParticles from "../components/floating-particles"
