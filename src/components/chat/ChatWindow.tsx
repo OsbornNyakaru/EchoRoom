@@ -144,6 +144,7 @@ const ChatWindow: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
+      style={{ flex: 'none', minHeight: 0, height: '100%' }}
     >
       {/* Revolutionary Chat Header */}
       <motion.div
@@ -315,7 +316,7 @@ const ChatWindow: React.FC = () => {
       </motion.div>
 
       {/* Messages Container */}
-      <div className="flex-1 relative overflow-hidden min-h-0">
+      <div className="flex-1 relative overflow-hidden min-h-0" style={{ minHeight: 0, height: '100%' }}>
         <div
           ref={messagesContainerRef}
           onScroll={handleScroll}

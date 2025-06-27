@@ -1,34 +1,27 @@
 "use client"
 
 import type React from "react"
-import { useState, type KeyboardEvent, useRef, useEffect, useCallback, type TouchEvent } from "react"
+import { useState, type KeyboardEvent, useRef, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  Plus,
-  ImageIcon,
-  Camera,
+  Send,
+  Smile,
+  Paperclip,
   Mic,
   MicOff,
+  X,
+  Plus,
+  Image,
+  Camera,
+  FileText,
+  MapPin,
+  Gift,
+  Sticker,
+  Hash,
   AtSign,
-  Bold,
-  Italic,
-  Code,
-  Quote,
-  ChevronUp,
-  ChevronDown,
-  Heart,
-  Coffee,
-  Moon,
-  Sun,
-  Zap,
-  Sparkles,
-  ArrowUp,
-  Keyboard,
-  Volume2,
-  Vibrate,
+  MoreHorizontal,
 } from "lucide-react"
-import { Button } from "../ui/button"
-import { cn } from "@/lib/utils"
+import { cn } from "../../lib/utils"
 
 interface MessageInputProps {
   onSendMessage: (content: string) => void
@@ -40,96 +33,40 @@ interface MessageInputProps {
     mood: string
     avatar: string
   }
+  disabled?: boolean
+  placeholder?: string
 }
 
-const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStart, onTypingStop, currentUser }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ 
+  onSendMessage, 
+  onTypingStart, 
+  onTypingStop, 
+  currentUser,
+  disabled = false,
+  placeholder = "Type a message..."
+}) => {
   const [message, setMessage] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const [isRecording, setIsRecording] = useState(false)
   const [recordingTime, setRecordingTime] = useState(0)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const [showAttachments, setShowAttachments] = useState(false)
   const [showMentions, setShowMentions] = useState(false)
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
-  const [touchStartY, setTouchStartY] = useState(0)
-  const [swipeDirection, setSwipeDirection] = useState<"up" | "down" | null>(null)
-  const [hapticEnabled, setHapticEnabled] = useState(true)
 
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
   const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const getMoodColor = (mood: string) => {
-    const colors = {
-      hopeful: "#f59e0b",
-      lonely: "#6366f1",
-      motivated: "#ef4444",
-      calm: "#10b981",
-      loving: "#ec4899",
-      joyful: "#8b5cf6",
-    }
-    return colors[mood?.toLowerCase() as keyof typeof colors] || "#10b981"
-  }
-
-  const getMoodIcon = (mood: string) => {
-    const icons = {
-      hopeful: Sun,
-      lonely: Moon,
-      motivated: Zap,
-      calm: Coffee,
-      loving: Heart,
-      joyful: Sparkles,
-    }
-    return icons[mood?.toLowerCase() as keyof typeof icons] || Coffee
-  }
-
-  const moodColor = currentUser ? getMoodColor(currentUser.mood) : "#10b981"
-  const MoodIcon = currentUser ? getMoodIcon(currentUser.mood) : Coffee
-
-  // Simulate haptic feedback for mobile
-  const triggerHaptic = useCallback(
-    (type: "light" | "medium" | "heavy" = "light") => {
-      if (!hapticEnabled) return
-
-      // Try to use native haptic feedback if available
-      if ("vibrate" in navigator) {
-        const patterns = {
-          light: [10],
-          medium: [20],
-          heavy: [30, 10, 30],
-        }
-        navigator.vibrate(patterns[type])
-      }
-    },
-    [hapticEnabled],
-  )
-
-  // Detect mobile keyboard visibility
-  useEffect(() => {
-    const handleResize = () => {
-      const viewport = window.visualViewport
-      if (viewport) {
-        const keyboardHeight = window.innerHeight - viewport.height
-        setIsKeyboardVisible(keyboardHeight > 100)
-      }
-    }
-
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", handleResize)
-      return () => window.visualViewport?.removeEventListener("resize", handleResize)
-    }
-  }, [])
-
-  // Auto-resize textarea for mobile
+  // Auto-resize textarea
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto"
-      const newHeight = Math.min(inputRef.current.scrollHeight, isExpanded ? 120 : 80)
+      const newHeight = Math.min(inputRef.current.scrollHeight, 120)
       inputRef.current.style.height = `${newHeight}px`
     }
-  }, [message, isExpanded])
+  }, [message])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value
@@ -139,7 +76,6 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
     if (newValue.length > 0 && !isTyping) {
       onTypingStart()
       setIsTyping(true)
-      triggerHaptic("light")
     } else if (newValue.length === 0 && isTyping) {
       onTypingStop()
       setIsTyping(false)
@@ -150,35 +86,35 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
       clearTimeout(typingTimeoutRef.current)
     }
 
-    // Set new timeout to stop typing after user stops typing
+    // Set new timeout to stop typing
     if (newValue.length > 0) {
       typingTimeoutRef.current = setTimeout(() => {
         onTypingStop()
         setIsTyping(false)
-      }, 2000)
+      }, 1500)
     }
 
     // Check for mentions
-    if (newValue.includes("@")) {
+    const lastAtIndex = newValue.lastIndexOf('@')
+    if (lastAtIndex !== -1 && lastAtIndex === newValue.length - 1) {
       setShowMentions(true)
     } else {
       setShowMentions(false)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     sendMessage()
   }
 
   const sendMessage = useCallback(() => {
     const trimmedMessage = message.trim()
-    if (trimmedMessage) {
+    if (trimmedMessage && !disabled) {
       onSendMessage(trimmedMessage)
       setMessage("")
-      triggerHaptic("medium")
 
-      // Clear typing state immediately when sending
+      // Clear typing state
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
       }
@@ -187,57 +123,29 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
         setIsTyping(false)
       }
 
-      // Reset states
+      // Close any open panels
+      setShowEmojiPicker(false)
+      setShowAttachments(false)
       setShowMentions(false)
-      setIsExpanded(false)
     }
-  }, [message, isTyping, onSendMessage, onTypingStop, triggerHaptic])
+  }, [message, disabled, isTyping, onSendMessage, onTypingStop])
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    // Mobile keyboard handling
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       sendMessage()
     }
   }
 
-  // Touch gesture handlers
-  const handleTouchStart = (e: TouchEvent) => {
-    setTouchStartY(e.touches[0].clientY)
-  }
-
-  const handleTouchMove = (e: TouchEvent) => {
-    const currentY = e.touches[0].clientY
-    const deltaY = touchStartY - currentY
-
-    if (Math.abs(deltaY) > 10) {
-      setSwipeDirection(deltaY > 0 ? "up" : "down")
-    }
-  }
-
-  const handleTouchEnd = () => {
-    if (swipeDirection === "up" && !isExpanded) {
-      setIsExpanded(true)
-      triggerHaptic("light")
-    } else if (swipeDirection === "down" && isExpanded) {
-      setIsExpanded(false)
-      triggerHaptic("light")
-    }
-    setSwipeDirection(null)
-  }
-
-  // Voice recording with long press
-  const handleRecordStart = (e: React.TouchEvent | React.MouseEvent) => {
-    e.preventDefault()
+  // Voice recording
+  const handleRecordStart = () => {
     longPressTimeoutRef.current = setTimeout(() => {
       setIsRecording(true)
       setRecordingTime(0)
-      triggerHaptic("heavy")
-
       recordingIntervalRef.current = setInterval(() => {
         setRecordingTime((prev) => prev + 1)
       }, 1000)
-    }, 200) // 200ms long press
+    }, 200)
   }
 
   const handleRecordEnd = () => {
@@ -253,45 +161,23 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
 
       if (recordingTime > 0) {
         onSendMessage(`🎤 Voice message (${formatTime(recordingTime)})`)
-        triggerHaptic("medium")
       }
       setRecordingTime(0)
     }
   }
 
-  const insertText = (text: string) => {
+  const insertEmoji = (emoji: string) => {
     if (!inputRef.current) return
 
     const start = inputRef.current.selectionStart
     const end = inputRef.current.selectionEnd
-    const newText = message.substring(0, start) + text + message.substring(end)
+    const newText = message.substring(0, start) + emoji + message.substring(end)
 
     setMessage(newText)
-    triggerHaptic("light")
 
     setTimeout(() => {
       if (inputRef.current) {
-        const newPosition = start + text.length
-        inputRef.current.setSelectionRange(newPosition, newPosition)
-        inputRef.current.focus()
-      }
-    }, 0)
-  }
-
-  const insertFormatting = (before: string, after: string) => {
-    if (!inputRef.current) return
-
-    const start = inputRef.current.selectionStart
-    const end = inputRef.current.selectionEnd
-    const selectedText = message.substring(start, end)
-    const newText = message.substring(0, start) + before + selectedText + after + message.substring(end)
-
-    setMessage(newText)
-    triggerHaptic("light")
-
-    setTimeout(() => {
-      if (inputRef.current) {
-        const newPosition = start + before.length + selectedText.length
+        const newPosition = start + emoji.length
         inputRef.current.setSelectionRange(newPosition, newPosition)
         inputRef.current.focus()
       }
@@ -306,17 +192,13 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
 
   const handleFocus = () => {
     setIsFocused(true)
-    if (message.length > 0 && !isTyping) {
-      onTypingStart()
-      setIsTyping(true)
-    }
   }
 
   const handleBlur = () => {
     setIsFocused(false)
   }
 
-  // Cleanup timeouts on unmount
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
@@ -325,288 +207,51 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
     }
   }, [])
 
-  // Mobile-optimized quick replies
-  const quickReplies = [
-    { emoji: "👍", label: "👍" },
-    { emoji: "❤️", label: "❤️" },
-    { emoji: "😂", label: "😂" },
-    { emoji: "🤔", label: "🤔" },
-    { emoji: "👏", label: "👏" },
-    { emoji: "🙏", label: "🙏" },
-    { emoji: "💪", label: "💪" },
-    { emoji: "✨", label: "✨" },
+  // Quick emoji reactions
+  const quickEmojis = ["😊", "😂", "❤️", "👍", "🙏", "🔥", "🎉", "🤔"]
+
+  // Attachment options
+  const attachmentOptions = [
+    { icon: Image, label: "Photo", color: "text-blue-500", bg: "bg-blue-50" },
+    { icon: Camera, label: "Camera", color: "text-green-500", bg: "bg-green-50" },
+    { icon: FileText, label: "Document", color: "text-purple-500", bg: "bg-purple-50" },
+    { icon: MapPin, label: "Location", color: "text-red-500", bg: "bg-red-50" },
+    { icon: Gift, label: "Poll", color: "text-yellow-500", bg: "bg-yellow-50" },
+    { icon: Sticker, label: "Sticker", color: "text-pink-500", bg: "bg-pink-50" },
   ]
 
-  // Mobile-optimized quick actions
-  const quickActions = [
-    { icon: Camera, label: "Camera", color: "text-green-400" },
-    { icon: ImageIcon, label: "Photo", color: "text-blue-400" },
-    { icon: AtSign, label: "Mention", color: "text-purple-400" },
-  ]
-
-  // Mobile-optimized formatting
-  const mobileFormatting = [
-    { icon: Bold, label: "B", format: ["**", "**"] },
-    { icon: Italic, label: "I", format: ["*", "*"] },
-    { icon: Code, label: "<>", format: ["`", "`"] },
-    { icon: Quote, label: '"', format: ["> ", ""] },
-  ]
-
-  // Mobile emoji grid
-  const mobileEmojis = [
-    "😊",
-    "😂",
-    "❤️",
-    "👍",
-    "🙏",
-    "💪",
-    "✨",
-    "🔥",
-    "🎉",
-    "🤗",
-    "😢",
-    "🤔",
-    "😍",
-    "🥳",
-    "😎",
-    "🤝",
-    "💯",
-    "🚀",
-    "⭐",
-    "🌟",
-    "💖",
-    "🎯",
-    "🏆",
-    "🎊",
-  ]
-
+  // Mention suggestions
   const mentionSuggestions = [
-    { name: "everyone", type: "group" },
-    { name: "here", type: "group" },
-    { name: "Alex Chen", type: "user" },
-    { name: "Sarah Kim", type: "user" },
+    { name: "everyone", type: "channel", avatar: "#" },
+    { name: "here", type: "channel", avatar: "#" },
+    { name: currentUser?.userName || "You", type: "user", avatar: currentUser?.userName?.charAt(0) || "U" },
   ]
+
+  const hasContent = message.trim().length > 0
 
   return (
-    <motion.div
-      ref={containerRef}
-      className={cn(
-        "relative transition-all duration-300",
-        // Better mobile spacing and safe area handling
-        isKeyboardVisible && "pb-safe-area-inset-bottom",
-        "px-1 lg:px-0", // Add horizontal padding on mobile
-      )}
-      animate={{
-        height: isExpanded ? "auto" : "auto",
-        paddingBottom: isKeyboardVisible ? "env(safe-area-inset-bottom)" : "0",
-      }}
-    >
-      {/* Mobile Swipe Indicator */}
+    <div className="relative">
+      {/* Voice Recording Overlay */}
       <AnimatePresence>
-        {isFocused && !isExpanded && (
+        {isRecording && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="flex justify-center pb-2"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="absolute inset-0 bg-red-500/10 backdrop-blur-sm rounded-2xl border-2 border-red-500/30 flex items-center justify-center z-50"
           >
-            <motion.div
-              className="flex items-center gap-1 text-xs text-gray-400 bg-white/5 px-3 py-1 rounded-full"
-              animate={{ y: [0, -2, 0] }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            >
-              <ChevronUp className="w-3 h-3" />
-              <span>Swipe up for more</span>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Expanded Mobile Toolbar */}
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-3 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 overflow-hidden"
-          >
-            {/* Quick Actions Row */}
-            <div className="p-3 border-b border-white/10">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-xs text-gray-400 font-medium">Quick Actions</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsExpanded(false)}
-                  className="h-6 w-6 p-0 text-gray-400"
-                >
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                {quickActions.map((action) => (
-                  <motion.button
-                    key={action.label}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-                    onClick={() => triggerHaptic("light")}
-                  >
-                    <action.icon className={`h-6 w-6 ${action.color}`} />
-                    <span className="text-xs text-white">{action.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Formatting Row */}
-            <div className="p-3 border-b border-white/10">
-              <span className="text-xs text-gray-400 font-medium mb-2 block">Formatting</span>
-              <div className="flex gap-2">
-                {mobileFormatting.map((format) => (
-                  <motion.button
-                    key={format.label}
-                    whileTap={{ scale: 0.9 }}
-                    className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-                    onClick={() => {
-                      insertFormatting(format.format[0], format.format[1])
-                      triggerHaptic("light")
-                    }}
-                  >
-                    <format.icon className="h-4 w-4 text-white" />
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Emojis */}
-            <div className="p-3">
-              <span className="text-xs text-gray-400 font-medium mb-2 block">Quick Emojis</span>
-              <div className="grid grid-cols-8 gap-2">
-                {mobileEmojis.slice(0, 16).map((emoji, index) => (
-                  <motion.button
-                    key={emoji}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.02 }}
-                    whileTap={{ scale: 0.8 }}
-                    className="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/10 transition-colors text-lg"
-                    onClick={() => {
-                      insertText(emoji)
-                      triggerHaptic("light")
-                    }}
-                  >
-                    {emoji}
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* User Preview - Mobile Optimized */}
-      {currentUser && isFocused && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="mb-3 p-3 rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm"
-          style={{
-            background: `linear-gradient(135deg, ${moodColor}15 0%, rgba(255, 255, 255, 0.05) 100%)`,
-            borderColor: moodColor + "30",
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white border-2"
-                style={{
-                  backgroundColor: moodColor + "40",
-                  borderColor: moodColor + "60",
-                }}
+            <div className="text-center">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-3"
               >
-                {currentUser.userName?.charAt(0) || "U"}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white text-sm font-medium">{currentUser.userName}</span>
-                  <MoodIcon className="w-3 h-3" style={{ color: moodColor }} />
-                </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  <span>{message.length}/500</span>
-                  {isTyping && (
-                    <div className="flex items-center gap-1">
-                      <span className="text-blue-400">typing</span>
-                      <div className="flex gap-1">
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className="w-1 h-1 bg-blue-400 rounded-full"
-                            animate={{
-                              scale: [1, 1.5, 1],
-                              opacity: [0.5, 1, 0.5],
-                            }}
-                            transition={{
-                              duration: 1,
-                              repeat: Number.POSITIVE_INFINITY,
-                              delay: i * 0.2,
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                <Mic className="w-8 h-8 text-white" />
+              </motion.div>
+              <p className="text-red-600 font-medium">Recording...</p>
+              <p className="text-red-500 text-lg font-mono">{formatTime(recordingTime)}</p>
+              <p className="text-gray-500 text-sm mt-1">Release to send</p>
             </div>
-
-            {/* Haptic toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setHapticEnabled(!hapticEnabled)
-                triggerHaptic("medium")
-              }}
-              className="h-8 w-8 p-0"
-            >
-              {hapticEnabled ? (
-                <Vibrate className="h-4 w-4 text-green-400" />
-              ) : (
-                <Volume2 className="h-4 w-4 text-gray-400" />
-              )}
-            </Button>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Quick Reactions - Mobile Optimized */}
-      <AnimatePresence>
-        {isFocused && !isExpanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="flex gap-1.5 lg:gap-2 mb-3 overflow-x-auto pb-2 scrollbar-none px-1 lg:px-0"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {quickReplies.map((reply, index) => (
-              <motion.button
-                key={reply.emoji}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                whileTap={{ scale: 0.9 }}
-                className="flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 rounded-full bg-white/5 backdrop-blur-sm border border-white/20 flex items-center justify-center text-base lg:text-lg hover:bg-white/10 transition-colors"
-                onClick={() => {
-                  onSendMessage(reply.emoji)
-                  triggerHaptic("light")
-                }}
-              >
-                {reply.emoji}
-              </motion.button>
-            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -618,188 +263,256 @@ const MessageInput: React.FC<MessageInputProps> = ({ onSendMessage, onTypingStar
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-full left-0 mb-2 bg-white/10 backdrop-blur-xl rounded-xl p-2 border border-white/20 min-w-[200px] z-50"
+            className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 min-w-[250px] max-h-[200px] overflow-y-auto z-50"
           >
-            {mentionSuggestions.map((mention, index) => (
-              <motion.button
-                key={mention.name}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-white/10 transition-colors text-left"
-                onClick={() => insertText(`@${mention.name} `)}
-              >
-                <AtSign className="w-3 h-3 text-blue-400" />
-                <span className="text-sm text-white">{mention.name}</span>
-                <span className="text-xs text-gray-400 ml-auto">{mention.type}</span>
-              </motion.button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Voice Recording Overlay - Mobile Optimized */}
-      <AnimatePresence>
-        {isRecording && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="absolute inset-0 bg-red-500/20 backdrop-blur-sm rounded-2xl border-2 border-red-500/50 flex items-center justify-center z-50"
-          >
-            <div className="text-center">
-              <motion.div
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
-                className="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4"
-              >
-                <Mic className="w-10 h-10 text-white" />
-              </motion.div>
-              <p className="text-white font-medium text-lg">Recording...</p>
-              <p className="text-red-400 text-xl font-mono">{formatTime(recordingTime)}</p>
-              <p className="text-gray-300 text-sm mt-2">Release to send</p>
+            <div className="p-2">
+              <div className="text-xs font-medium text-gray-500 mb-2 px-2">Suggestions</div>
+              {mentionSuggestions.map((mention, index) => (
+                <motion.button
+                  key={mention.name}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                  onClick={() => {
+                    const newMessage = message.slice(0, -1) + `@${mention.name} `
+                    setMessage(newMessage)
+                    setShowMentions(false)
+                    inputRef.current?.focus()
+                  }}
+                >
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+                    mention.type === "channel" 
+                      ? "bg-blue-100 text-blue-600" 
+                      : "bg-gray-100 text-gray-600"
+                  )}>
+                    {mention.avatar}
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{mention.name}</div>
+                    <div className="text-xs text-gray-500 capitalize">{mention.type}</div>
+                  </div>
+                </motion.button>
+              ))}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main Input Form - Mobile Optimized */}
-      <form onSubmit={handleSubmit} className="flex items-end gap-2">
-        {/* Expand/Collapse Button - Smaller on mobile */}
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setIsExpanded(!isExpanded)
-            triggerHaptic("light")
-          }}
-          className="bg-white/5 backdrop-blur-sm border-white/20 text-white hover:bg-white/10 rounded-full transition-all duration-200 flex-shrink-0 w-10 h-10 lg:w-12 lg:h-12 flex items-center justify-center"
-        >
-          <motion.div animate={{ rotate: isExpanded ? 45 : 0 }} transition={{ duration: 0.2 }}>
-            <Plus className="h-4 w-4 lg:h-5 lg:w-5" />
-          </motion.div>
-        </Button>
-
-        {/* Text Input Container - Optimized for mobile */}
-        <div
-          className="flex-1 relative min-w-0"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <textarea
-            ref={inputRef}
-            value={message}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder="Type a message..."
-            className={cn(
-              "w-full pr-12 lg:pr-16 rounded-2xl resize-none transition-all duration-200",
-              "bg-white/5 backdrop-blur-sm border border-white/20 text-white placeholder-gray-400",
-              "focus:outline-none focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20",
-              "min-h-[48px] lg:min-h-[56px] max-h-[120px]",
-              // Mobile-specific padding and text size
-              "px-3 py-3 lg:px-4 lg:py-4 text-base lg:text-base",
-              isFocused && "border-blue-400/50 ring-2 ring-blue-400/20",
-            )}
-            rows={1}
-            maxLength={500}
-            autoComplete="off"
-            autoCorrect="on"
-            spellCheck="true"
-          />
-
-          {/* Mobile Input Indicators - Repositioned */}
-          <div className="absolute bottom-2 right-2 flex items-center gap-1">
-            {message.length > 400 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className={cn(
-                  "text-xs px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full",
-                  message.length > 450 ? "bg-red-500/20 text-red-400" : "bg-yellow-500/20 text-yellow-400",
-                )}
-              >
-                {message.length}
-              </motion.div>
-            )}
-
-            {isFocused && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-xs text-gray-400 bg-white/5 px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-full flex items-center gap-1"
-              >
-                <Keyboard className="w-2 h-2 lg:w-2.5 lg:h-2.5" />
-              </motion.div>
-            )}
-          </div>
-        </div>
-
-        {/* Action Buttons Container - Optimized spacing */}
-        <div className="flex items-center gap-1.5 lg:gap-2 flex-shrink-0">
-          {/* Voice Recording Button - Compact on mobile */}
-          <motion.button
-            type="button"
-            onTouchStart={handleRecordStart}
-            onTouchEnd={handleRecordEnd}
-            onMouseDown={handleRecordStart}
-            onMouseUp={handleRecordEnd}
-            onMouseLeave={handleRecordEnd}
-            className={cn(
-              "rounded-full transition-all duration-200 flex-shrink-0 flex items-center justify-center",
-              "bg-white/5 backdrop-blur-sm border border-white/20 text-white hover:bg-white/10",
-              "w-10 h-10 lg:w-12 lg:h-12", // Smaller on mobile
-              isRecording && "bg-red-500/20 border-red-400/50 text-red-400 scale-110",
-            )}
-            whileTap={{ scale: 0.95 }}
-          >
-            {isRecording ? <MicOff className="h-4 w-4 lg:h-5 lg:w-5" /> : <Mic className="h-4 w-4 lg:h-5 lg:w-5" />}
-          </motion.button>
-
-          {/* Send Button - Compact on mobile */}
-          <motion.button
-            type="submit"
-            disabled={!message.trim()}
-            className={cn(
-              "rounded-full transition-all duration-200 relative overflow-hidden flex-shrink-0 flex items-center justify-center",
-              "w-10 h-10 lg:w-12 lg:h-12", // Smaller on mobile
-              message.trim()
-                ? "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg"
-                : "bg-white/5 backdrop-blur-sm border border-white/20 text-gray-400 cursor-not-allowed",
-            )}
-            whileTap={message.trim() ? { scale: 0.95 } : {}}
-            onClick={() => message.trim() && triggerHaptic("medium")}
-          >
-            {message.trim() && (
-              <motion.div
-                className="absolute inset-0 bg-white/20 rounded-full scale-0"
-                animate={{ scale: [0, 1, 0] }}
-                transition={{ duration: 0.6, repeat: Number.POSITIVE_INFINITY }}
-              />
-            )}
-            <ArrowUp className="h-4 w-4 lg:h-5 lg:w-5 relative z-10" />
-          </motion.button>
-        </div>
-      </form>
-
-      {/* Mobile Keyboard Shortcuts Help */}
+      {/* Emoji Picker */}
       <AnimatePresence>
-        {isFocused && !isKeyboardVisible && (
+        {showEmojiPicker && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            className="mt-2 text-xs text-gray-400 text-center"
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full right-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 z-50"
           >
-            Hold mic to record • Swipe up for more options
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-medium text-gray-700">Quick reactions</div>
+              <button
+                onClick={() => setShowEmojiPicker(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {quickEmojis.map((emoji, index) => (
+                <motion.button
+                  key={emoji}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center text-lg transition-colors"
+                  onClick={() => insertEmoji(emoji)}
+                >
+                  {emoji}
+                </motion.button>
+              ))}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+
+      {/* Attachments Menu */}
+      <AnimatePresence>
+        {showAttachments && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="absolute bottom-full left-0 mb-2 bg-white rounded-xl shadow-lg border border-gray-200 p-3 z-50"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-sm font-medium text-gray-700">Share</div>
+              <button
+                onClick={() => setShowAttachments(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {attachmentOptions.map((option, index) => (
+                <motion.button
+                  key={option.label}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex flex-col items-center gap-2 p-3 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={() => {
+                    // Handle attachment selection
+                    setShowAttachments(false)
+                  }}
+                >
+                  <div className={cn("w-10 h-10 rounded-full flex items-center justify-center", option.bg)}>
+                    <option.icon className={cn("w-5 h-5", option.color)} />
+                  </div>
+                  <span className="text-xs font-medium text-gray-600">{option.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Input Container */}
+      <form onSubmit={handleSubmit} className="relative">
+        <div className={cn(
+          "flex items-end gap-2 p-3 bg-white rounded-2xl border transition-all duration-200",
+          isFocused ? "border-blue-300 shadow-sm" : "border-gray-200",
+          disabled && "opacity-50 pointer-events-none"
+        )}>
+          {/* Attachment Button */}
+          <button
+            type="button"
+            onClick={() => {
+              setShowAttachments(!showAttachments)
+              setShowEmojiPicker(false)
+            }}
+            className={cn(
+              "p-2 rounded-full transition-colors flex-shrink-0",
+              showAttachments 
+                ? "bg-blue-100 text-blue-600" 
+                : "hover:bg-gray-100 text-gray-500"
+            )}
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+
+          {/* Text Input */}
+          <div className="flex-1 relative">
+            <textarea
+              ref={inputRef}
+              value={message}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              placeholder={placeholder}
+              disabled={disabled}
+              className="w-full resize-none border-0 outline-none bg-transparent text-gray-900 placeholder-gray-500 text-base leading-5 max-h-[120px] min-h-[24px]"
+              rows={1}
+              maxLength={2000}
+              style={{ height: "24px" }}
+            />
+            
+            {/* Character count for long messages */}
+            {message.length > 1800 && (
+              <div className={cn(
+                "absolute -top-6 right-0 text-xs px-2 py-1 rounded-full",
+                message.length > 1950 
+                  ? "bg-red-100 text-red-600" 
+                  : "bg-yellow-100 text-yellow-600"
+              )}>
+                {message.length}/2000
+              </div>
+            )}
+          </div>
+
+          {/* Right Actions */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Emoji Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowEmojiPicker(!showEmojiPicker)
+                setShowAttachments(false)
+              }}
+              className={cn(
+                "p-2 rounded-full transition-colors",
+                showEmojiPicker 
+                  ? "bg-blue-100 text-blue-600" 
+                  : "hover:bg-gray-100 text-gray-500"
+              )}
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+
+            {/* Voice/Send Button */}
+            {hasContent ? (
+              <motion.button
+                type="submit"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-2 bg-blue-500 hover:bg-blue-600 text-white rounded-full transition-colors"
+              >
+                <Send className="w-5 h-5" />
+              </motion.button>
+            ) : (
+              <button
+                type="button"
+                onMouseDown={handleRecordStart}
+                onMouseUp={handleRecordEnd}
+                onMouseLeave={handleRecordEnd}
+                onTouchStart={handleRecordStart}
+                onTouchEnd={handleRecordEnd}
+                className={cn(
+                  "p-2 rounded-full transition-colors",
+                  isRecording 
+                    ? "bg-red-100 text-red-600" 
+                    : "hover:bg-gray-100 text-gray-500"
+                )}
+              >
+                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </button>
+            )}
+          </div>
+        </div>
+      </form>
+
+      {/* Quick Emoji Bar (when focused but no content) */}
+      <AnimatePresence>
+        {isFocused && !hasContent && !showEmojiPicker && !showAttachments && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-2 flex gap-2 overflow-x-auto pb-2"
+          >
+            {quickEmojis.map((emoji, index) => (
+              <motion.button
+                key={emoji}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.05 }}
+                whileTap={{ scale: 0.9 }}
+                className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-lg transition-colors"
+                onClick={() => insertEmoji(emoji)}
+              >
+                {emoji}
+              </motion.button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
