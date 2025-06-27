@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "../components/ui/card"
 import { Button } from "../components/ui/button"
-import { Mic, MicOff, Volume2, VolumeX, ArrowRight, Sparkles, Loader2, Home, Bot, Info, ArrowLeft, Grid3X3, ChevronDown, Sun, Moon, Star, Coffee, Heart, Smile, Book } from 'lucide-react'
+import { Volume2, VolumeX, ArrowRight, Sparkles, Loader2, Home, Bot, Info, ArrowLeft, Grid3X3, ChevronDown, Sun, Moon, Star, Coffee, Heart, Smile, Book } from 'lucide-react'
 import FloatingParticles from "../components/floating-particles"
 import UserNameModal from "../components/UserNameModal"
 import { useSocketContext } from "../context/SocketContext"
@@ -46,7 +46,6 @@ export default function Welcome() {
   const validatedMood = validMoods.includes(mood) ? mood : "calm"
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(true)
-  const [isMicEnabled, setIsMicEnabled] = useState(true)
   const [currentStep, setCurrentStep] = useState(0)
   const [isReady, setIsReady] = useState(false)
   const REDIRECT_DELAY_MS = 5000; // 5 seconds delay for auto-redirection
