@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Smile, Heart, Coffee, Star, Moon, Sun, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Github, Twitter, Mail, ArrowUp, Target, Lightbulb, Globe } from "lucide-react"
+import { Smile, Heart, Coffee, Star, Moon, Sun, Sparkles, Users, Clock, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Github, Twitter, Mail, ArrowUp } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import FloatingParticles from "../components/floating-particles"
@@ -67,9 +67,9 @@ export default function HomePage() {
   ]
 
   const stats = [
-    { icon: <Target className="h-6 w-6" />, label: "Mood Categories", value: "7+ Moods" },
-    { icon: <Lightbulb className="h-6 w-6" />, label: "Tavus + ElevenLabs, Mistral", value: "AI-Integration" },
-    { icon: <Globe className="h-6 w-6" />, label: "Global Reach", value: "24/7 Access" },
+    { icon: <Users className="h-6 w-6" />, label: "Active Members", value: "5.3K+" },
+    { icon: <Clock className="h-6 w-6" />, label: "Daily Sessions", value: "847" },
+    { icon: <Sparkles className="h-6 w-6" />, label: "Satisfaction Rate", value: "94%" },
   ]
 
   const features = [
