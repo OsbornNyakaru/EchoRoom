@@ -42,15 +42,14 @@ const createSocket = () => {
   return io(SOCKET_URL, {
     transports: ['websocket', 'polling'],
     withCredentials: true,
-    timeout: 30000, // Increased timeout to 30 seconds
+    timeout: 30000, // Connection timeout
     forceNew: false,
     reconnection: true,
     reconnectionDelay: 2000, // Wait 2 seconds before first reconnect
     reconnectionDelayMax: 10000, // Max 10 seconds between reconnects
-    reconnectionAttempts: 10, // Fixed: use correct property name
-    // Add ping/pong to keep connection alive
-    pingTimeout: 60000,
-    pingInterval: 25000,
+    reconnectionAttempts: 10, // Number of reconnection attempts
+    // Remove invalid properties - these are server-side only
+    // pingTimeout and pingInterval are not valid client options
   }) as Socket;
 };
 
