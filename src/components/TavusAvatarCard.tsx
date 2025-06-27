@@ -111,7 +111,7 @@ const TavusAvatarCard: React.FC<TavusAvatarCardProps> = ({
             </div>
             {isLocalImage && (
               <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-xs font-medium px-2 py-1">
-                Custom Image
+                Tavus or ElevenLabs AI agent
               </Badge>
             )}
           </div>
@@ -618,7 +618,7 @@ const DesktopContent: React.FC<{
                   <p className="text-white/90 text-lg">Choose how you'd like to interact with your AI assistant</p>
                   {isLocalImage && (
                     <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-sm mt-3 px-3 py-1">
-                      Using Custom Image
+                      Tavus or ElevenLabs ConvoAI agent
                     </Badge>
                   )}
                 </motion.div>
