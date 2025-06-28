@@ -20,6 +20,8 @@ EchoRoom is a sophisticated voice-based group chat platform designed for emotion
 
 ### WebSocket Integration
 
+- Backend Repo: https://github.com/OsbornNyakaru/backend-echo
+  
 ```typescript
 // Socket.IO client setup
 import { io, Socket } from 'socket.io-client'
