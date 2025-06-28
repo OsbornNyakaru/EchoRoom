@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Smile, Heart, Coffee, Star, Moon, Sun, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Github, Twitter, Mail, ArrowUp, Target, Lightbulb, Globe } from "lucide-react"
+import { Smile, Heart, Coffee, Star, Moon, Sun, Book, Home, Bot, Info, Shield, Zap, MessageCircle, Mail, ArrowUp, Target, Lightbulb, Globe, X, GithubIcon } from "lucide-react"
 import { Button } from "../components/ui/button"
 import { Card } from "../components/ui/card"
 import FloatingParticles from "../components/floating-particles"
@@ -140,22 +140,22 @@ export default function HomePage() {
   // Social media links with their respective colors and animations
   const socialLinks = [
     {
-      icon: Twitter,
-      href: "https://twitter.com/echoroom",
+      icon: X,
+      href: "https://x.com/NyakaruOsborn",
       color: "#1DA1F2",
       hoverColor: "#0d8bd9",
-      name: "Twitter"
+      name: "X"
     },
     {
-      icon: Github,
-      href: "https://github.com/echoroom",
+      icon: GithubIcon,
+      href: "https://github.com/OsbornNyakaru/EchoRoom.git",
       color: "#333",
       hoverColor: "#24292e",
       name: "GitHub"
     },
     {
       icon: Mail,
-      href: "mailto:hello@echoroom.com",
+      href: "mailto:osbornnyakaru44@gmail.com",
       color: "#EA4335",
       hoverColor: "#d33b2c",
       name: "Email"
