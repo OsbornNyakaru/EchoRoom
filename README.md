@@ -2,6 +2,10 @@
 
 ![Hackathon](https://img.shields.io/badge/Bolt%20Hackathon-2025-blueviolet) ![Vite](https://img.shields.io/badge/Vite-React%2018-yellow) ![TypeScript](https://img.shields.io/badge/TypeScript-4.x-blue) ![Socket.IO](https://img.shields.io/badge/Socket.IO-RealTime-brightgreen)
 
+## 📺 Submission Video
+
+[Watch the Demo on YouTube](https://youtu.be/2M7sd6AwuIY)
+
 > **EchoRoom** is a next-generation, mood-based voice and chat platform for meaningful, emotionally resonant group conversations. Designed for the world's largest hackathon by Bolt, EchoRoom blends real-time voice, AI-powered chat, and a safe, anonymous environment to foster mental wellness and authentic connection.
 
 ---
