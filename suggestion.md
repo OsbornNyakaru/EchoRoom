@@ -118,8 +118,8 @@ src/
 
 1. **Clone the frontend repo:**
    ```bash
-   git clone https://github.com/OsbornNyakaru/echoroom
-   cd echoroom_template
+   git clone https://github.com/OsbornNyakaru/EchoRoom.git
+   cd EchoRoom
    ```
 2. **Install dependencies:**
    ```bash
