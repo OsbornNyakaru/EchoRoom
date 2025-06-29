@@ -156,7 +156,7 @@ src/
 
 | Home Page | Room (Voice + Chat) | AI Avatar | Mobile View |
 |-----------|---------------------|-----------|-------------|
-| ![Home Screenshot](screenshots/home.png) | ![Room Screenshot](screenshots/room.png) | ![AI Avatar Screenshot](screenshots/ai-avatar.png) | ![Mobile Screenshot](screenshots/mobile.png) |
+| ![Home Screenshot](screenshots/home.png) | ![Room Screenshot](/screenshots/room.png) | ![AI Avatar Screenshot](/screenshots/ai-avatar.png) | ![Mobile Screenshot](/screenshots/mobile.png) |
 
 ---
 
