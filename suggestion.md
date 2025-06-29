@@ -1,6 +1,6 @@
 # EchoRoom 🚀
 
-![Hackathon](https://img.shields.io/badge/Bolt%20Hackathon-2024-blueviolet) ![Vite](https://img.shields.io/badge/Vite-React%2018-yellow) ![TypeScript](https://img.shields.io/badge/TypeScript-4.x-blue) ![Socket.IO](https://img.shields.io/badge/Socket.IO-RealTime-brightgreen)
+![Hackathon](https://img.shields.io/badge/Bolt%20Hackathon-2025-blueviolet) ![Vite](https://img.shields.io/badge/Vite-React%2018-yellow) ![TypeScript](https://img.shields.io/badge/TypeScript-4.x-blue) ![Socket.IO](https://img.shields.io/badge/Socket.IO-RealTime-brightgreen)
 
 > **EchoRoom** is a next-generation, mood-based voice and chat platform for meaningful, emotionally resonant group conversations. Designed for the world's largest hackathon by Bolt, EchoRoom blends real-time voice, AI-powered chat, and a safe, anonymous environment to foster mental wellness and authentic connection.
 
@@ -154,37 +154,13 @@ src/
 
 > _Screenshots of the main features below to showcase the UI and experience._
 
-### Home Page
-![Home Screenshot](/public/screenshots/home.png)
-_Caption: Mood selection and entry point to EchoRoom._
+| Home Page | Welcome Page | Room (Voice + Chat) | AI Avatar | Mobile View |
+|-----------|--------------|---------------------|-----------|-------------|
+| ![Home Screenshot](/public/screenshots/home.png) | ![Welcome Screenshot](/public/screenshots/welcome.png) | ![Room Screenshot](/public/screenshots/room.png) | ![AI Avatar Screenshot](/public/screenshots/ai-avatar.png) | ![Mobile Screenshot](/public/screenshots/mobile.png) |
 
-### Welcome Page
-![Welcome Screenshot](/public/screenshots/welcome.png)
-_Caption: AI-powered onboarding and introduction to EchoRoom._
-
-### Room (Voice + Chat)
-![Room Screenshot](/public/screenshots/room.png)
-_Caption: Main room interface with real-time voice and chat side by side._
-
-### AI Avatar
-![AI Avatar Screenshot](/public/screenshots/ai-avatar.png)
-_Caption: Interactive AI avatar card (Tavus/ElevenLabs) for video and voice experiences._
-
-### Mobile View
-![Mobile Screenshot](/public/screenshots/mobile.png)
-_Caption: Responsive mobile layout for chat and voice participation._
-
-### AI Avatar Dashboard & ElevenLabs Voice Agent
-<div style="display: flex; gap: 16px; align-items: flex-start;">
-  <div style="flex: 1; text-align: center;">
-    <img src="/public/screenshots/ai-avatar-dashboard.png" alt="AI Avatar Dashboard" style="max-width: 100%; border-radius: 8px;" />
-    <div style="font-size: 0.95em; color: #666;">AI Avatar dashboard: choose between voice or video interaction.</div>
-  </div>
-  <div style="flex: 1; text-align: center;">
-    <img src="/public/screenshots/elevenlabs-voice-agent.png" alt="ElevenLabs Voice Agent" style="max-width: 100%; border-radius: 8px;" />
-    <div style="font-size: 0.95em; color: #666;">ElevenLabs voice agent: real-time AI voice chat experience.</div>
-  </div>
-</div>
+| AI Avatar Dashboard | ElevenLabs Voice Agent |
+|---------------------|-----------------------|
+| ![AI Avatar Dashboard](/public/screenshots/ai-avatar-dashboard.png) | ![ElevenLabs Voice Agent](/public/screenshots/elevenlabs-voice-agent.png) |
 
 ---
 
