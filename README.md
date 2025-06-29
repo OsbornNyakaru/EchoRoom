@@ -216,7 +216,7 @@ MIT License. See [LICENSE](LICENSE) for details.
 ---
 
 ## 🙌 Acknowledgements
-- Built for the World's Largest Hackathon by Bolt.new 2025
+- Built for the World's Largest Hackathon by [Bolt.new](https://bolt.new/) 2025
 - Inspired by the need for safe, meaningful online connection
 - Thanks to all open-source contributors and the mental wellness community
 
