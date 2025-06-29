@@ -45,7 +45,7 @@
 - **AI Avatar Integration:**
   - Interactive AI avatar card (TavusAvatarCard) with video, voice, and preview modes.
   - ElevenLabs ConvoAI widget for voice-based AI chat (mobile and desktop variants).
-  - Mistral LLM integration for chat/mood analysis (if enabled in backend).
+  - Mistral LLM integration for chat/mood analysis and moderation 
 - **Anonymous User Identity:**
   - Anonymous user ID and username generation, persisted in localStorage.
   - UserNameModal for setting/changing display name.
@@ -154,18 +154,46 @@ src/
 
 > _Screenshots of the main features below to showcase the UI and experience._
 
-| Home Page | Room (Voice + Chat) | AI Avatar | Mobile View |
-|-----------|---------------------|-----------|-------------|
-| ![Home Screenshot](/public/screenshots/home.png) | ![Room Screenshot](/public/screenshots/room.png) | ![AI Avatar Screenshot](/public/screenshots/ai-avatar.png) | ![Mobile Screenshot](/public/screenshots/mobile.png) |
+### Home Page
+![Home Screenshot](/public/screenshots/home.png)
+_Caption: Mood selection and entry point to EchoRoom._
+
+### Welcome Page
+![Welcome Screenshot](/public/screenshots/welcome.png)
+_Caption: AI-powered onboarding and introduction to EchoRoom._
+
+### Room (Voice + Chat)
+![Room Screenshot](/public/screenshots/room.png)
+_Caption: Main room interface with real-time voice and chat side by side._
+
+### AI Avatar
+![AI Avatar Screenshot](/public/screenshots/ai-avatar.png)
+_Caption: Interactive AI avatar card (Tavus/ElevenLabs) for video and voice experiences._
+
+### Mobile View
+![Mobile Screenshot](/public/screenshots/mobile.png)
+_Caption: Responsive mobile layout for chat and voice participation._
+
+### AI Avatar Dashboard & ElevenLabs Voice Agent
+<div style="display: flex; gap: 16px; align-items: flex-start;">
+  <div style="flex: 1; text-align: center;">
+    <img src="/public/screenshots/ai-avatar-dashboard.png" alt="AI Avatar Dashboard" style="max-width: 100%; border-radius: 8px;" />
+    <div style="font-size: 0.95em; color: #666;">AI Avatar dashboard: choose between voice or video interaction.</div>
+  </div>
+  <div style="flex: 1; text-align: center;">
+    <img src="/public/screenshots/elevenlabs-voice-agent.png" alt="ElevenLabs Voice Agent" style="max-width: 100%; border-radius: 8px;" />
+    <div style="font-size: 0.95em; color: #666;">ElevenLabs voice agent: real-time AI voice chat experience.</div>
+  </div>
+</div>
 
 ---
 
 ## 🤖 AI & Real-Time Technology
 
 ### AI Features
-- **Tavus:** AI video avatars for interactive group experiences.
-- **ElevenLabs:** Voice-based AI chat agent, embedded in the UI.
-- **Mistral:** LLM for chat and mood analysis (if enabled in backend).
+- **Tavus:** Integrated as an interactive AI video avatar. Users can interact with the TavusAvatarCard, which supports video, voice, and preview modes. The avatar is fetched dynamically and can be used for both video calls and voice-only sessions. The card provides a seamless UI for switching between modes and is available on both mobile and desktop layouts.
+- **ElevenLabs:** Integrated as a real-time voice AI agent. The ElevenLabsConvoAIWidget is embedded directly into the UI, dynamically loading the ElevenLabs ConvoAI widget script. It adapts its appearance for mobile (expandable orb) and desktop (full widget), allowing users to have live voice conversations with the AI agent in supported rooms.
+- **Mistral:** LLM integration for chat/mood analysis and moderation.
 
 ### Real-Time Features
 - **Live Participant Updates:** See who joins/leaves, who's speaking, and who's typing in real time.
