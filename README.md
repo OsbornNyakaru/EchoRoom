@@ -145,14 +145,10 @@ src/
 ---
 
 ## 💬 Usage
-- **Join mood-based rooms** for authentic, supportive group conversations.
-- **Voice & video chat:** Speak, mute/unmute, see who's talking, and join video with AI avatars (Tavus) or voice calls ConvoAI Agents (ElevenLabs).
-- **Real-time chat:** Send messages, see typing indicators, and react with emojis instantly.
-- **AI avatars & agents:** Interact with Tavus (video/voice), ElevenLabs (voice AI), and experience live mood analysis.
-- **Anonymous identity:** Set your display name and join rooms without sharing personal info.
-- **Participant & session management:** See who joins/leaves, track moods, and enjoy persistent chat/user state.
-- **Sound & notification controls:** Toggle sound effects and notifications for key events.
-- **Modern, accessible UI:** Responsive design, keyboard navigation, and mobile optimization for a seamless experience.
+- **Join a Room:** Select your mood and enter a voice+chat room.
+- **Chat & React:** Send messages, react with emojis, and see who's typing.
+- **Voice Participation:** Speak, mute/unmute, and see who's talking in real time.
+- **AI Avatars:** Interact with AI avatars (Tavus, ElevenLabs) in supported rooms.
 
 ---
 
