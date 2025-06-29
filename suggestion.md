@@ -152,11 +152,11 @@ src/
 
 ## 🖼️ Screenshots
 
-> _Add screenshots or GIFs of the main features below to showcase the UI and experience._
+> _Screenshots of the main features below to showcase the UI and experience._
 
 | Home Page | Room (Voice + Chat) | AI Avatar | Mobile View |
 |-----------|---------------------|-----------|-------------|
-| ![Home Screenshot](screenshots/home.png) | ![Room Screenshot](/screenshots/room.png) | ![AI Avatar Screenshot](/screenshots/ai-avatar.png) | ![Mobile Screenshot](/screenshots/mobile.png) |
+| ![Home Screenshot](/public/screenshots/home.png) | ![Room Screenshot](/public/screenshots/room.png) | ![AI Avatar Screenshot](/public/screenshots/ai-avatar.png) | ![Mobile Screenshot](/public/screenshots/mobile.png) |
 
 ---
 
