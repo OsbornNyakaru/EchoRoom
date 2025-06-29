@@ -156,11 +156,26 @@ src/
 
 | Home Page | Welcome Page | Room (Voice + Chat) | AI Avatar | Mobile View |
 |-----------|--------------|---------------------|-----------|-------------|
-| ![Home Screenshot](/public/screenshots/home.png) | ![Welcome Screenshot](/public/screenshots/welcome.png) | ![Room Screenshot](/public/screenshots/room.png) | ![AI Avatar Dashboard](/public/screenshots/ai-avatar-dashboard.png)  | ![Mobile Screenshot](/public/screenshots/mobile.png) |
+| ![Home Screenshot](/public/screenshots/home.png) | ![Welcome Screenshot](/public/screenshots/welcome.png) | ![Room Screenshot](/public/screenshots/room.png) | ![AI Avatar Dashboard](/public/screenshots/ai-avatar-dashboard.png) | ![Mobile Screenshot](/public/screenshots/mobile.png) |
+
+*Home Page: Mood selection and entry point*
+
+*Welcome Page: AI-powered onboarding*
+
+*Room (Mood-based chat rooms): Chat anonymously in one room*
+
+*AI Avatar Dashboard: Choose voice or video interaction*
+
+*Mobile View: Responsive mobile layout*
 
 | AI Avatar Dashboard | ElevenLabs Voice Agent |
 |---------------------|-----------------------|
 | ![AI Avatar Screenshot](/public/screenshots/ai-avatar.png) | ![ElevenLabs Voice Agent](/public/screenshots/elevenlabs-voice-agent.png) |
+
+
+*AI Avatar: AI avatar (Tavus Conversational Video)*
+
+*ElevenLabs Voice Agent: Real-time AI voice chat experience*
 
 ---
 
